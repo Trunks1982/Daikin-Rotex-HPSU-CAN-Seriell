@@ -1,6 +1,8 @@
 daikin_rotex_can:
   id: rotext_hpsu
   canbus_id: can_bus
+  # tranlation language, supported: de, en, it. If not set, the default language is de
+  language: de    
   update_interval: 60                 # Set the global update interval to 60 seconds. Default is 30
   entities:
     tdhw1:

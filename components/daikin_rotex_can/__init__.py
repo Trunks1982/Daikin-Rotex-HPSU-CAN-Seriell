@@ -11,8 +11,669 @@ import subprocess
 import logging
 import os
 
+translations = {
+    "de": {  # German
+        "heating": "Heizen",
+        "cooling": "Kühlen",
+        "standby": "Standby",
+        "hot_water_production": "Warmwasserbereitung",
+        "defrosting": "Abtauen",
+        "optimized_defrosting": "Optimiertes Abtauen",
+        "temperature_antifreeze": "T-Frostschutz",
+        "temperature_antifreeze_off": "Aus",
+        "off": "Aus",
+        "on": "An",
+        "night_only": "Nur bei Nacht",							  
+        "monday": "Montag",
+        "tuesday": "Dienstag",
+        "wednesday": "Mittwoch",
+        "thursday": "Donnerstag",
+        "friday": "Freitag",
+        "saturday": "Samstag",
+        "sunday": "Sonntag",
+        "mo_to_su": "Montag bis Sonntag",
+        "lowering": "Absenken",
+        "summer": "Sommer",
+        "automatic_1": "Automatik 1",
+        "automatic_2": "Automatik 2",
+        "weather_dependent": "Witterungsgeführt",		
+        "standby_mode": "Standby",
+        "heating_mode": "Heizen",
+        "cooling_mode": "Kühlen",
+        "defrosting_mode": "Abtauen",
+        "hot_water_production_mode": "Warmwasserbereitung",
+        "sg_mode_1": "SG Modus 1",
+        "sg_mode_2": "SG Modus 2",
+        "fixed": "Fest",
+        "no_additional_heat_generator": "Kein zusätzlicher Wärmeerzeuger",
+        "optional_backup_heater": "Optionaler Backup-Heater",
+        "wez_for_hot_water_and_heating": "WEZ für WW und HZ",
+        "wez1_for_hot_water_wez2_for_heating": "WEZ1 für WW - WEZ2 für HZ",
+        "err_0": "Kein Fehler",
+        "err_E9001": "E9001 Rücklauffühler",
+        "err_E9002": "E9002 Vorlauffühler",
+        "err_E9003": "E9003 Frostschutzfunktion",
+        "err_E9004": "E9004 Durchfluss",
+        "err_E9005": "E9005 Vorlauftemperaturfühler",
+        "err_E9006": "E9006 Vorlauftemperaturfühler",
+        "err_E9007": "E9007 Platine IG defekt",
+        "err_E9008": "E9008 Kältemitteltemperatur außerhalb des Bereiches",
+        "err_E9009": "E9009 STB Fehler",
+        "err_E9010": "E9010 STB Fehler",
+        "err_E9011": "E9011 Fehler Flowsensor",
+        "err_E9012": "E9012 Fehler Vorlauffühler",
+        "err_E9013": "E9013 Platine AG defekt",
+        "err_E9014": "E9014 P-Kältemittel hoch",
+        "err_E9015": "E9015 P-Kältemittel niedrig",
+        "err_E9016": "E9016 Lastschutz Verdichter",
+        "err_E9017": "E9017 Ventilator blockiert",
+        "err_E9018": "E9018 Expansionsventil",
+        "err_E9019": "E9019 Warmwassertemperatur > 85°C",
+        "err_E9020": "E9020 T-Verdampfer hoch",
+        "err_E9021": "E9021 HPS-System",
+        "err_E9022": "E9022 Fehler AT-Fühler",
+        "err_E9023": "E9023 Fehler WW-Fühler",
+        "err_E9024": "E9024 Drucksensor",
+        "err_E9025": "E9025 Fehler Rücklauffühler",
+        "err_E9026": "E9026 Drucksensor",
+        "err_E9027": "E9027 Aircoil-Fühler Defrost",
+        "err_E9028": "E9028 Aircoil-Fühler temp",
+        "err_E9029": "E9029 Fehler Kältefühler AG",
+        "err_E9030": "E9030 Defekt elektrisch",
+        "err_E9031": "E9031 Defekt elektrisch",
+        "err_E9032": "E9032 Defekt elektrisch",
+        "err_E9033": "E9033 Defekt elektrisch",
+        "err_E9034": "E9034 Defekt elektrisch",
+        "err_E9035": "E9035 Platine AG defekt",
+        "err_E9036": "E9036 Defekt elektrisch",
+        "err_E9037": "E9037 Einstellung Leistung",
+        "err_E9038": "E9038 Kältemittel Leck",
+        "err_E9039": "E9039 Unter/Überspannung",
+        "err_E9041": "E9041 Übertragungsfehler",
+        "err_E9042": "E9042 Übertragungsfehler",
+        "err_E9043": "E9043 Übertragungsfehler",
+        "err_E9044": "E9044 Übertragungsfehler",
+        "err_E75": "E75 Fehler Außentemperaturfühler",
+        "err_E76": "E76 Fehler Speichertemperaturfühler",
+        "err_E81": "E81 Kommunikationsfehler Rocon",
+        "err_E88": "E88 Kommunikationsfehler Rocon Handbuch",
+        "err_E91": "E91 Kommunikationsfehler Rocon Handbuch",
+        "err_E128": "E128 Fehler Rücklauftemperaturfühler",
+        "err_E129": "E129 Fehler Drucksensor",
+        "err_E198": "E198 Durchflussmessung nicht plausibel",
+        "err_E200": "E200 Kommunikationsfehler",
+        "err_E8005": "E8005 Wasserdruck in Heizungsanlage zu gering",
+        "err_E8100": "E8100 Kommunikation",
+        "err_E9000": "E9000 Interne vorübergehende Meldung",
+        "err_W8006": "W8006 Warnung Druckverlust",
+        "err_W8007": "W8007 Wasserdruck in Anlage zu hoch",
+        "defect": "Defekt",
+        "sgn_normal_mode": "SGN - Normaler Modus",
+        "sg1_hot_water_and_heating_off": "SG1 - WW & HZ ausgeschalten",
+        "sg2_hot_water_and_heating_plus_5c": "SG2 - WW & HZ + 5°C",
+        "sg3_hot_water_70c": "SG3 - WW 70°C",
+        # Entities
+        "ext": "Ext",
+        "tv": "Heizkreis Vorlauf (TV)",
+        "tvbh": "Vorlauftemperatur Heizung (TVBH)",
+        "tr": "Ruecklauftemperatur Heizung",
+        "temperature_outside": "Aussentemperatur",
+        "tliq": "Tliq",
+        "ta2": "TA2",
+        "water_pressure": "Wasserdruck",
+        "t_hs": "T-WE",
+        "t_ext": "T-Aussen",
+        "flow_rate": "Durchfluss",
+        "status_kesselpumpe": "Status Kesselpumpe",
+        "runtime_compressor": "Laufzeit Compressor",
+        "runtime_pump": "Laufzeit Pump",
+        "dhw_mixer_position": "DHW Mischer Position",
+        "qboh": "EHS für DHW",
+        "ehs_for_ch": "EHS fuer CH",
+        "energy_cooling": "Energie Kühlung",
+        "qch": "Energie Heizung",
+        "total_energy_produced": "Erzeugte Energie Gesamt",
+        "qdhw": "Energie für WW",
+        "total_electrical_energy": "Elektrische Energie Gesamt",
+        "energy_saving_mode": "ES mode",
+        "operating_mode": "Betriebsmodus",
+        "target_room1_temperature": "Raumsoll 1",
+        "target_hot_water_temperature": "T-WW-Soll1",
+        "1_dhw": "1 x Warmwasser",
+        "hp_hyst_tdhw": "WPHyst TDHW",
+        "delay_time_for_backup_heating": "Wartezeit BOH",
+        "outdoor_unit": "Aussengerät",
+        "indoor_unit": "Innengerät",
+        "function_ehs": "Funktion EHS",
+        "ch_support": "HZ Unterstützung",
+        "smart_grid": "Smart Grid",
+        "sg_mode": "SG Modus",
+        "external_temp_sensor": "SKonfig T-Außen",
+        "power_dhw": "Leistung WW",
+        "power_ehs_1": "Leistung EHS Stufe 1",
+        "power_ehs_2": "Leistung EHS Stufe 2",
+        "power_biv": "Leistung BIV",
+        "tdiff_dhw_ch": "TDiff-WW HZU",
+        "max_heating_temperature": "Max Temp Heizung",
+        "quiet": "Flüsterbetrieb",
+        "t_dhw_1_min": "Schaltschwelle TDHW",
+        "delta_temp_ch": "Spreizung HZ",
+        "delta_temp_dhw": "Spreizung WW",
+        "flow_rate_min": "Durchfluss Min",
+        "flow_rate_setpoint": "Durchfluss Soll",
+        "flow_rate_calc": "DurchflussBer",
+        "flow_rate_hyst": "Durchfluss Hyst",
+        "supply_temperature_adjustment_heating": "Anpassung T-VL Heizen",
+        "supply_temperature_adjustment_cooling": "Anpassung T-VL Kühlen",
+        "hk_function": "HK Funktion",
+        "temperature_antifreeze": "T-Frostschutz",
+        "heating_limit_day": "Heizgrenze Tag",
+        "heating_limit_night": "Heizgrenze Nacht",
+        "heating_curve": "Heizkurve",
+        "flow_temperature_day": "T Vorlauf Tag",
+        "flow_temperature_night": "T Vorlauf Nacht",
+        "max_target_flow_temp": "Max T-Vorlauf",
+        "min_target_flow_temp": "Min T-Vorlauf",
+        "circulation_with_dhw_program": "Zirk mit WW-Prog",
+        "circulation_interval_on": "ZirkInterval An",
+        "circulation_interval_off": "ZirkInterval Aus",
+        "antileg_day": "AntilegTag",
+        "antileg_temp": "AntilegTemp",
+        "max_dhw_loading": "Max WW Ladezeit",
+        "dhw_off_time": "WW Sperrzeit",
+        "electric_heater": "Heizstäbe - Für Pumpen nach Oktober 2018",
+        "thermal_power": "Thermische Leistung",
+        "optimized_defrosting": "Abtau-Optimierung",
+        "bypass_valve": "BPV",
+        "circulation_pump": "Umwaelzpumpe",
+        "circulation_pump_min": "Umwälzpumpe Min",
+        "circulation_pump_max": "Umwälzpumpe Max",
+        "dhw_run": "Warmwasser bereiten",
+        "error_code": "Fehlercode",
+        "mode_of_operating": "Betriebsart",
+        "status_kompressor": "Status Kompressor",
+        "tdhw1": "Warmwassertemperatur",
+        "target_supply_temperature": "Vorlauf Soll"            
+    },
+    "en": {  # English
+        "heating": "Heating",
+        "cooling": "Cooling",
+        "standby": "Standby",
+        "hot_water_production": "Hot Water Production",
+        "defrosting": "Defrosting",
+        "optimized_defrosting": "Optimized Defrosting",
+        "temperature_antifreeze": "Antifreeze Temperature",
+        "temperature_antifreeze_off": "Off",
+        "off": "Off",
+        "on": "On",
+        "night_only": "Night Only",						   
+        "monday": "Monday",
+        "tuesday": "Tuesday",
+        "wednesday": "Wednesday",
+        "thursday": "Thursday",
+        "friday": "Friday",
+        "saturday": "Saturday",
+        "sunday": "Sunday",
+        "mo_to_su": "Monday to Sunday",
+        "lowering": "Lowering",
+        "summer": "Summer",
+        "automatic_1": "Automatic 1",
+        "automatic_2": "Automatic 2",
+        "weather_dependent": "Weather Dependent",		
+        "standby_mode": "Standby",
+        "heating_mode": "Heating",
+        "cooling_mode": "Cooling",
+        "defrosting_mode": "Defrosting",
+        "hot_water_production_mode": "Hot Water Production",
+        "sg_mode_1": "SG Mode 1",
+        "sg_mode_2": "SG Mode 2",
+        "fixed": "Fixed",
+        "no_additional_heat_generator": "No Additional Heat Generator",
+        "optional_backup_heater": "Optional Backup Heater",
+        "wez_for_hot_water_and_heating": "WEZ for Hot Water and Heating",
+        "wez1_for_hot_water_wez2_for_heating": "WEZ1 for Hot Water - WEZ2 for Heating",
+        "err_0": "No Error",
+        "err_E9001": "E9001 Return Sensor",
+        "err_E9002": "E9002 Supply Sensor",
+        "err_E9003": "E9003 Frost Protection Function",
+        "err_E9004": "E9004 Flow",
+        "err_E9005": "E9005 Supply Temperature Sensor",
+        "err_E9006": "E9006 Supply Temperature Sensor",
+        "err_E9007": "E9007 IG Board Defective",
+        "err_E9008": "E9008 Refrigerant Temperature Out of Range",
+        "err_E9009": "E9009 STB Error",
+        "err_E9010": "E9010 STB Error",
+        "err_E9011": "E9011 Flow Sensor Error",
+        "err_E9012": "E9012 Supply Sensor Error",
+        "err_E9013": "E9013 AG Board Defective",
+        "err_E9014": "E9014 High Refrigerant Pressure",
+        "err_E9015": "E9015 Low Refrigerant Pressure",
+        "err_E9016": "E9016 Compressor Overload Protection",
+        "err_E9017": "E9017 Fan Blocked",
+        "err_E9018": "E9018 Expansion Valve",
+        "err_E9019": "E9019 Hot Water Temperature > 85°C",
+        "err_E9020": "E9020 High Evaporator Temperature",
+        "err_E9021": "E9021 HPS System",
+        "err_E9022": "E9022 Ambient Temperature Sensor Error",
+        "err_E9023": "E9023 Hot Water Sensor Error",
+        "err_E9024": "E9024 Pressure Sensor",
+        "err_E9025": "E9025 Return Sensor Error",
+        "err_E9026": "E9026 Pressure Sensor",
+        "err_E9027": "E9027 Air Coil Defrost Sensor",
+        "err_E9028": "E9028 Air Coil Temperature Sensor",
+        "err_E9029": "E9029 Cooling Sensor Error AG",
+        "err_E9030": "E9030 Electrical Defect",
+        "err_E9031": "E9031 Electrical Defect",
+        "err_E9032": "E9032 Electrical Defect",
+        "err_E9033": "E9033 Electrical Defect",
+        "err_E9034": "E9034 Electrical Defect",
+        "err_E9035": "E9035 AG Board Defective",
+        "err_E9036": "E9036 Electrical Defect",
+        "err_E9037": "E9037 Power Setting",
+        "err_E9038": "E9038 Refrigerant Leak",
+        "err_E9039": "E9039 Under/Over Voltage",
+        "err_E9041": "E9041 Communication Error",
+        "err_E9042": "E9042 Communication Error",
+        "err_E9043": "E9043 Communication Error",
+        "err_E9044": "E9044 Communication Error",
+        "err_E75": "E75 Ambient Temperature Sensor Error",
+        "err_E76": "E76 Storage Temperature Sensor Error",
+        "err_E81": "E81 Communication Error Rocon",
+        "err_E88": "E88 Communication Error Rocon Manual",
+        "err_E91": "E91 Communication Error Rocon Manual",
+        "err_E128": "E128 Return Temperature Sensor Error",
+        "err_E129": "E129 Pressure Sensor Error",
+        "err_E198": "E198 Flow Measurement Not Plausible",
+        "err_E200": "E200 Communication Error",
+        "err_E8005": "E8005 Water Pressure in Heating System Too Low",
+        "err_E8100": "E8100 Communication",
+        "err_E9000": "E9000 Temporary Internal Message",
+        "err_W8006": "W8006 Pressure Loss Warning",
+        "err_W8007": "W8007 Water Pressure in System Too High",
+        "defect": "Defect",
+        "sgn_normal_mode": "SGN - Normal Mode",
+        "sg1_hot_water_and_heating_off": "SG1 - Hot Water and Heating Off",
+        "sg2_hot_water_and_heating_plus_5c": "SG2 - Hot Water and Heating +5°C",
+        "sg3_hot_water_70c": "SG3 - Hot Water 70°C",
+        # Entities
+        "ext": "Ext",
+        "tv": "Heating Circuit Flow (TV)",
+        "tvbh": "Flow Temperature Heating (TVBH)",
+        "tr": "Return Temperature Heating",
+        "temperature_outside": "Outside Temperature",
+        "tliq": "Tliq",
+        "ta2": "TA2",
+        "water_pressure": "Water Pressure",
+        "t_hs": "T-WE",
+        "t_ext": "T-Outside",
+        "flow_rate": "Flow Rate",
+        "status_kesselpumpe": "Boiler Pump Status",
+        "runtime_compressor": "Compressor Runtime",
+        "runtime_pump": "Pump Runtime",
+        "dhw_mixer_position": "DHW Mixer Position",
+        "qboh": "EHS for DHW",
+        "ehs_for_ch": "EHS for CH",
+        "energy_cooling": "Cooling Energy",
+        "qch": "Heating Energy",
+        "total_energy_produced": "Total Energy Produced",
+        "qdhw": "Energy for DHW",
+        "total_electrical_energy": "Total Electrical Energy",
+        "energy_saving_mode": "ES Mode",
+        "operating_mode": "Operating Mode",
+        "target_room1_temperature": "Target Room 1 Temperature",
+        "target_hot_water_temperature": "Target Hot Water Temperature",
+        "1_dhw": "1 x Domestic Hot Water",
+        "hp_hyst_tdhw": "HP Hyst TDHW",
+        "delay_time_for_backup_heating": "Waiting Time for Backup Heating",
+        "outdoor_unit": "Outdoor Unit",
+        "indoor_unit": "Indoor Unit",
+        "function_ehs": "Function EHS",
+        "ch_support": "CH Support",
+        "smart_grid": "Smart Grid",
+        "sg_mode": "SG Mode",
+        "external_temp_sensor": "Config External Temperature",
+        "power_dhw": "Power DHW",
+        "power_ehs_1": "Power EHS Level 1",
+        "power_ehs_2": "Power EHS Level 2",
+        "power_biv": "Power BIV",
+        "tdiff_dhw_ch": "TDiff DHW CH",
+        "max_heating_temperature": "Max Heating Temperature",
+        "quiet": "Silent Mode",
+        "t_dhw_1_min": "Switch Threshold TDHW",
+        "delta_temp_ch": "CH Spread",
+        "delta_temp_dhw": "DHW Spread",
+        "flow_rate_min": "Flow Rate Min",
+        "flow_rate_setpoint": "Flow Rate Setpoint",
+        "flow_rate_calc": "Flow Rate Calculated",
+        "flow_rate_hyst": "Flow Rate Hysteresis",
+        "supply_temperature_adjustment_heating": "Supply Temperature Adjustment Heating",
+        "supply_temperature_adjustment_cooling": "Supply Temperature Adjustment Cooling",
+        "hk_function": "HK Function",
+        "temperature_antifreeze": "Anti-Freeze Temperature",
+        "heating_limit_day": "Heating Limit Day",
+        "heating_limit_night": "Heating Limit Night",
+        "heating_curve": "Heating Curve",
+        "flow_temperature_day": "Flow Temperature Day",
+        "flow_temperature_night": "Flow Temperature Night",
+        "max_target_flow_temp": "Max Target Flow Temperature",
+        "min_target_flow_temp": "Min Target Flow Temperature",
+        "circulation_with_dhw_program": "Circulation with DHW Program",
+        "circulation_interval_on": "Circulation Interval On",
+        "circulation_interval_off": "Circulation Interval Off",
+        "antileg_day": "Anti-Legionella Day",
+        "antileg_temp": "Anti-Legionella Temperature",
+        "max_dhw_loading": "Max DHW Loading Time",
+        "dhw_off_time": "DHW Off Time",
+        "electric_heater": "Electric Heater - For Pumps After October 2018",
+        "thermal_power": "Thermal Power",
+        "optimized_defrosting": "Optimized Defrosting",
+        "bypass_valve": "Bypass Valve",
+        "circulation_pump": "Circulation Pump",
+        "circulation_pump_min": "Circulation Pump Min",
+        "circulation_pump_max": "Circulation Pump Max",
+        "dhw_run": "DHW Run",
+        "error_code": "Error Code",
+        "mode_of_operating": "Operating Mode",
+        "status_kompressor": "Compressor Status",
+        "tdhw1": "Hot Water Temperature",
+        "target_supply_temperature": "Target Supply Temperature"     
+    },
+    "it": {  # Italian
+        "heating": "Riscaldamento",
+        "cooling": "Raffreddamento",
+        "standby": "Pronto",
+        "hot_water_production": "Produzione di Acqua Calda",
+        "defrosting": "Sbrinamento",
+        "optimized_defrosting": "Sbrinamento Ottimizzato",
+        "temperature_antifreeze": "Temperatura Antigelo",
+        "temperature_antifreeze_off": "Spento",
+        "off": "Spento",
+        "on": "Acceso",
+        "night_only": "Solo di Notte",							  
+        "monday": "Lunedì",
+        "tuesday": "Martedì",
+        "wednesday": "Mercoledì",
+        "thursday": "Giovedì",
+        "friday": "Venerdì",
+        "saturday": "Sabato",
+        "sunday": "Domenica",
+        "mo_to_su": "Lunedì a Domenica",
+        "lowering": "Abbassamento",
+        "summer": "Estate",
+        "automatic_1": "Automatico 1",
+        "automatic_2": "Automatico 2",
+        "weather_dependent": "Dipendente dal Tempo",		
+        "standby_mode": "Pronto",
+        "heating_mode": "Riscaldamento",
+        "cooling_mode": "Raffreddamento",
+        "defrosting_mode": "Sbrinamento",
+        "hot_water_production_mode": "Produzione di Acqua Calda",
+        "sg_mode_1": "Modalità SG 1",
+        "sg_mode_2": "Modalità SG 2",
+        "fixed": "Fisso",
+        "no_additional_heat_generator": "Nessun Generatore di Calore Aggiuntivo",
+        "optional_backup_heater": "Backup-Heater Opzionale",
+        "wez_for_hot_water_and_heating": "WEZ per Acqua Calda e Riscaldamento",
+        "wez1_for_hot_water_wez2_for_heating": "WEZ1 per Acqua Calda - WEZ2 per Riscaldamento",
+        "err_0": "Nessun Errore",
+        "err_E9001": "E9001 Sensore di Ritorno",
+        "err_E9002": "E9002 Sensore di Mandata",
+        "err_E9003": "E9003 Funzione Protezione Antigelo",
+        "err_E9004": "E9004 Flusso",
+        "err_E9005": "E9005 Sensore Temperatura Mandata",
+        "err_E9006": "E9006 Sensore Temperatura Mandata",
+        "err_E9007": "E9007 Scheda IG Difettosa",
+        "err_E9008": "E9008 Temperatura Refrigerante Fuori Range",
+        "err_E9009": "E9009 Errore STB",
+        "err_E9010": "E9010 Errore STB",
+        "err_E9011": "E9011 Errore Sensore di Flusso",
+        "err_E9012": "E9012 Errore Sensore Mandata",
+        "err_E9013": "E9013 Scheda AG Difettosa",
+        "err_E9014": "E9014 Pressione Refrigerante Alta",
+        "err_E9015": "E9015 Pressione Refrigerante Bassa",
+        "err_E9016": "E9016 Protezione Sovraccarico Compressore",
+        "err_E9017": "E9017 Ventilatore Bloccato",
+        "err_E9018": "E9018 Valvola di Espansione",
+        "err_E9019": "E9019 Temperatura Acqua Calda > 85°C",
+        "err_E9020": "E9020 Temperatura Evaporatore Alta",
+        "err_E9021": "E9021 Sistema HPS",
+        "err_E9022": "E9022 Errore Sensore Temperatura Ambiente",
+        "err_E9023": "E9023 Errore Sensore Acqua Calda",
+        "err_E9024": "E9024 Sensore di Pressione",
+        "err_E9025": "E9025 Errore Sensore di Ritorno",
+        "err_E9026": "E9026 Sensore di Pressione",
+        "err_E9027": "E9027 Sensore Sbrinamento Air Coil",
+        "err_E9028": "E9028 Sensore Temperatura Air Coil",
+        "err_E9029": "E9029 Errore Sensore Raffreddamento AG",
+        "err_E9030": "E9030 Difetto Elettrico",
+        "err_E9031": "E9031 Difetto Elettrico",
+        "err_E9032": "E9032 Difetto Elettrico",
+        "err_E9033": "E9033 Difetto Elettrico",
+        "err_E9034": "E9034 Difetto Elettrico",
+        "err_E9035": "E9035 Scheda AG Difettosa",
+        "err_E9036": "E9036 Difetto Elettrico",
+        "err_E9037": "E9037 Impostazione Potenza",
+        "err_E9038": "E9038 Perdita di Refrigerante",
+        "err_E9039": "E9039 Sotto/Sovratensione",
+        "err_E9041": "E9041 Errore di Comunicazione",
+        "err_E9042": "E9042 Errore di Comunicazione",
+        "err_E9043": "E9043 Errore di Comunicazione",
+        "err_E9044": "E9044 Errore di Comunicazione",
+        "err_E75": "E75 Errore Sensore Temperatura Ambiente",
+        "err_E76": "E76 Errore Sensore Temperatura Serbatoio",
+        "err_E81": "E81 Errore di Comunicazione Rocon",
+        "err_E88": "E88 Errore di Comunicazione Manuale Rocon",
+        "err_E91": "E91 Errore di Comunicazione Manuale Rocon",
+        "err_E128": "E128 Errore Sensore Temperatura di Ritorno",
+        "err_E129": "E129 Errore Sensore di Pressione",
+        "err_E198": "E198 Misurazione Flusso Non Plausibile",
+        "err_E200": "E200 Errore di Comunicazione",
+        "err_E8005": "E8005 Pressione dell'Acqua nel Sistema di Riscaldamento Troppo Bassa",
+        "err_E8100": "E8100 Comunicazione",
+        "err_E9000": "E9000 Messaggio Interno Temporaneo",
+        "err_W8006": "W8006 Avviso di Perdita di Pressione",
+        "err_W8007": "W8007 Pressione dell'Acqua nel Sistema Troppo Alta",
+        "defect": "Malfunzionamento",
+        "sgn_normal_mode": "SGN - Modalità Normale",
+        "sg1_hot_water_and_heating_off": "SG1 - Acqua Calda e Riscaldamento Spenti",
+        "sg2_hot_water_and_heating_plus_5c": "SG2 - Acqua Calda e Riscaldamento +5°C",
+        "sg3_hot_water_70c": "SG3 - Acqua Calda 70°C",
+        # Entities
+        "ext": "Esterno",
+        "tv": "Circuito Riscaldamento Mandata (TV)",
+        "tvbh": "Temperatura Mandata Riscaldamento (TVBH)",
+        "tr": "Temperatura Ritorno Riscaldamento",
+        "temperature_outside": "Temperatura Esterna",
+        "tliq": "Tliq",
+        "ta2": "TA2",
+        "water_pressure": "Pressione dell'Acqua",
+        "t_hs": "T-WE",
+        "t_ext": "T-Esterno",
+        "flow_rate": "Portata",
+        "status_kesselpumpe": "Stato Pompa Caldaia",
+        "runtime_compressor": "Tempo di Funzionamento Compressore",
+        "runtime_pump": "Tempo di Funzionamento Pompa",
+        "dhw_mixer_position": "Posizione Miscelatore ACS",
+        "qboh": "EHS per ACS",
+        "ehs_for_ch": "EHS per CH",
+        "energy_cooling": "Energia Raffreddamento",
+        "qch": "Energia Riscaldamento",
+        "total_energy_produced": "Energia Totale Prodotta",
+        "qdhw": "Energia per ACS",
+        "total_electrical_energy": "Energia Elettrica Totale",
+        "energy_saving_mode": "Modalità Risparmio Energetico",
+        "operating_mode": "Modalità di Funzionamento",
+        "target_room1_temperature": "Temperatura Obiettivo Stanza 1",
+        "target_hot_water_temperature": "Temperatura Obiettivo ACS",
+        "1_dhw": "1 x Acqua Calda",
+        "hp_hyst_tdhw": "HP Hyst TDHW",
+        "delay_time_for_backup_heating": "Tempo di Attesa per Riscaldamento di Backup",
+        "outdoor_unit": "Unità Esterna",
+        "indoor_unit": "Unità Interna",
+        "function_ehs": "Funzione EHS",
+        "ch_support": "Supporto CH",
+        "smart_grid": "Rete Intelligente",
+        "sg_mode": "Modalità SG",
+        "external_temp_sensor": "Configurazione Sensore Temperatura Esterna",
+        "power_dhw": "Potenza ACS",
+        "power_ehs_1": "Potenza EHS Livello 1",
+        "power_ehs_2": "Potenza EHS Livello 2",
+        "power_biv": "Potenza BIV",
+        "tdiff_dhw_ch": "TDiff ACS CH",
+        "max_heating_temperature": "Temperatura Massima Riscaldamento",
+        "quiet": "Modalità Silenziosa",
+        "t_dhw_1_min": "Soglia di Commutazione TDHW",
+        "delta_temp_ch": "Differenza Temperatura CH",
+        "delta_temp_dhw": "Differenza Temperatura ACS",
+        "flow_rate_min": "Portata Minima",
+        "flow_rate_setpoint": "Setpoint Portata",
+        "flow_rate_calc": "Portata Calcolata",
+        "flow_rate_hyst": "Isteresi Portata",
+        "supply_temperature_adjustment_heating": "Regolazione Temperatura Mandata Riscaldamento",
+        "supply_temperature_adjustment_cooling": "Regolazione Temperatura Mandata Raffreddamento",
+        "hk_function": "Funzione HK",
+        "temperature_antifreeze": "Temperatura Antigelo",
+        "heating_limit_day": "Limite Riscaldamento Giorno",
+        "heating_limit_night": "Limite Riscaldamento Notte",
+        "heating_curve": "Curva di Riscaldamento",
+        "flow_temperature_day": "Temperatura Mandata Giorno",
+        "flow_temperature_night": "Temperatura Mandata Notte",
+        "max_target_flow_temp": "Temperatura Massima Mandata Obiettivo",
+        "min_target_flow_temp": "Temperatura Minima Mandata Obiettivo",
+        "circulation_with_dhw_program": "Circolazione con Programma ACS",
+        "circulation_interval_on": "Intervallo Circolazione On",
+        "circulation_interval_off": "Intervallo Circolazione Off",
+        "antileg_day": "Giorno Anti-Legionella",
+        "antileg_temp": "Temperatura Anti-Legionella",
+        "max_dhw_loading": "Tempo Massimo di Caricamento ACS",
+        "dhw_off_time": "Tempo di Spegnimento ACS",
+        "electric_heater": "Resistenze Elettriche - Per Pompe dopo Ottobre 2018",
+        "thermal_power": "Potenza Termica",
+        "optimized_defrosting": "Sbrinamento Ottimizzato",
+        "bypass_valve": "Valvola di Bypass",
+        "circulation_pump": "Pompa di Circolazione",
+        "circulation_pump_min": "Pompa di Circolazione Minima",
+        "circulation_pump_max": "Pompa di Circolazione Massima",
+        "dhw_run": "Esecuzione ACS",
+        "error_code": "Codice di Errore",
+        "mode_of_operating": "Modalità di Operatività",
+        "status_kompressor": "Stato Compressore",
+        "tdhw1": "Temperatura Acqua Calda",
+        "target_supply_temperature": "Temperatura Mandata Obiettivo"        
+    },
+}
 
 _LOGGER = logging.getLogger(__name__)
+
+CONF_LANGUAGE = 'language'
+SUPPORTED_LANGUAGES = ['en', 'de', 'it']
+
+# Current language
+current_language = "de"
+delayed_translate_tag: str = "#translate#"
+
+def set_language(lang):
+    global current_language
+    if lang in translations:
+        _LOGGER.info("[Translate] Setting language to '%s'", lang)
+        current_language = lang
+    else:
+        _LOGGER.warning("[Translate] Language '%s' not found in dictionary. Falling back to English.", lang)
+        current_language = "en"  # Fallback
+
+def delayed_translate(key: str) -> str:
+    return delayed_translate_tag + key
+
+def translate(key: str) -> str:
+
+    global current_language
+    lang_translations = translations.get(current_language, translations.get("en", {}))
+
+    if key in lang_translations:
+        translated = lang_translations[key]
+        _LOGGER.info("[Translate] Key '%s' found in language '%s' -> '%s'",key, current_language, translated)
+        return translated
+
+    if "en" in translations and key in translations["en"]:
+        _LOGGER.warning(
+            "[Translate] Key '%s' not found in language '%s'. Falling back to English.", 
+            key, current_language
+        )
+        return translations["en"][key]
+    _LOGGER.error(
+        "[Translate] Key '%s' not found in language '%s' or in fallback language 'en'. Returning error message.", 
+        key, current_language
+    )
+    return f"ERROR: Key '{key}' not found"
+
+def apply_delayed_translate(key: str) -> str:
+    if isinstance(key, str) and key.startswith(delayed_translate_tag):
+        stripped_key = key[len(delayed_translate_tag):]
+        return translate(stripped_key)
+    return key
+
+def apply_translation_to_mapping(mapping: dict) -> dict:
+    return {key: apply_delayed_translate(value) for key, value in mapping.items()}
+
+def apply_translation_to_entityname(yaml_sensor_conf, id):
+    if "name" in yaml_sensor_conf and yaml_sensor_conf["name"].strip() == "auto":
+        yaml_sensor_conf["name"] = translate(id)
+
+# Esempio di implementazione
+delayed_translate_tag = "DELAYED_TRANSLATE:"
+
+# Generate translation.cpp, creating translation dictionary from python one
+def generate_cpp_translations_for_language(translations, selected_language, keys_to_include=None):
+    cpp_code = '#include "translations.h"\n'
+    cpp_code += '#include <string>\n\n'
+    cpp_code += '#include "esphome/core/log.h"\n\n'
+    cpp_code += 'namespace esphome {\nnamespace daikin_rotex_can {\n\n'
+
+    # check that selected language exists in dictionary
+    if selected_language not in translations:
+        raise ValueError(f"Selected language '{selected_language}' not found in translations dictionary.")
+
+    _LOGGER.info(f"Building cpp translate dictionary for language: {selected_language}")
+
+    # Reduces to only necessary records
+    selected_translations = translations[selected_language]
+    if keys_to_include:
+        selected_translations = {key: value for key, value in selected_translations.items() if key in keys_to_include}
+
+    # Cpp reduced dictionary
+    cpp_code += f'static const Translation translations[] = {{\n'
+    translation_entries = []
+    for key, value in translations[selected_language].items():
+        translation_entries.append(f'    {{"{key}", "{value}"}}')
+    cpp_code += ',\n'.join(translation_entries)
+    cpp_code += '\n};\n\n'
+
+    # Cpp translation function
+    cpp_code += (
+        'std::string translate(const std::string &key) {\n'
+        '    for (const auto &entry : translations) {\n'
+        '        if (key == entry.key) {\n'
+        '            ESP_LOGD("translate", "Key \'%s\' translated -> \'%s\'", key.c_str(), entry.value);\n'
+        '            return entry.value;\n'
+        '        }\n'
+        '    }\n'
+        '    ESP_LOGW("TRANSLATE", "Key \'%s\' not found", key.c_str());\n'
+        '    return "ERROR: Key \'" + key + "\' not found";\n'
+        '}\n\n'
+    )
+
+    cpp_code += '}  // namespace daikin_rotex_can\n'
+    cpp_code += '}  // namespace esphome\n'
+    return cpp_code
+
+# Write translations.cpp file
+def write_cpp_file(output_dir, selected_language):
+    _LOGGER.info("Writing cpp translate file")
+    cpp_code = generate_cpp_translations_for_language(translations, selected_language)
+    output_path = os.path.join(output_dir, "translations.cpp")
+    with open(output_path, "w") as f:
+        f.write(cpp_code)
+    _LOGGER.info(f"Generated {output_path}")    
 
 daikin_rotex_can_ns = cg.esphome_ns.namespace('daikin_rotex_can')
 DaikinRotexCanComponent = daikin_rotex_can_ns.class_('DaikinRotexCanComponent', cg.Component)
@@ -51,8 +712,8 @@ sensor_configuration = [
         "data_offset": 6,
         "data_size": 1,
         "map": {
-            0x00: "Aus",
-            0x01: "An"
+            0x00: delayed_translate("off"),
+            0x01: delayed_translate("on")
         }
     },
     {
@@ -141,15 +802,15 @@ sensor_configuration = [
         "data_offset": 5,
         "data_size": 1,
         "map": {
-            0x00: "Aus",
-            0x01: "Mo",
-            0x02: "Di",
-            0x03: "Mi",
-            0x04: "Do",
-            0x05: "Fr",
-            0x06: "Sa",
-            0x07: "So",
-            0x08: "Mo-So"
+            0x00: delayed_translate("off"),
+            0x01: delayed_translate("monday"),
+            0x02: delayed_translate("tuesday"),
+            0x03: delayed_translate("wednesday"),
+            0x04: delayed_translate("thursday"),
+            0x05: delayed_translate("friday"),
+            0x06: delayed_translate("saturday"),
+            0x07: delayed_translate("sunday"),
+            0x08: delayed_translate("mo_to_su")
         }
     },
     {
@@ -188,8 +849,8 @@ sensor_configuration = [
         "data_offset": 6,
         "data_size": 1,
         "map": {
-            0x00: "Aus",
-            0x01: "An"
+            0x00: delayed_translate("off"),
+            0x01: delayed_translate("on")
         }
     },
     {
@@ -583,7 +1244,7 @@ sensor_configuration = [
         "data_offset": 5,
         "data_size": 2,
         "divider": 10.0,
-        "map": {0xFF60 / 10.0: "Aus", **{i: f"{i} °C" for i in range(-15, 6)}}
+        "map": {0xFF60 / 10.0: delayed_translate("off"), **{i: f"{i} °C" for i in range(-15, 6)}}
     },
     {
         "type": "sensor",
@@ -809,7 +1470,7 @@ sensor_configuration = [
         "data_offset": 5,
         "data_size": 2,
         "divider": 10.0,
-        "map": {0xFE70 / 10.0: "Aus", **{i: f"{i} °C" for i in range(10, 41)}}
+        "map": {0xFE70 / 10.0: delayed_translate("off"), **{i: f"{i} °C" for i in range(10, 41)}}
     },
     {
         "type": "select",
@@ -825,7 +1486,7 @@ sensor_configuration = [
         "data_offset": 5,
         "data_size": 2,
         "divider": 10.0,
-        "map": {0x5A / 10.0: "Aus", **{i: f"{i} °C" for i in range(10, 41)}}
+        "map": {0x5A / 10.0: delayed_translate("off"), **{i: f"{i} °C" for i in range(10, 41)}}
     },
     {
         "type": "number",
@@ -910,11 +1571,11 @@ sensor_configuration = [
         "data_offset": 6,
         "data_size": 1,
         "map": {
-            0x00: "Standby",
-            0x01: "Heizen",
-            0x02: "Kühlen",
-            0x03: "Abtauen",
-            0x04: "Warmwasserbereitung"
+            0x00: delayed_translate("standby"),
+            0x01: delayed_translate("heating"),
+            0x02: delayed_translate("cooling"),
+            0x03: delayed_translate("defrosting"),
+            0x04: delayed_translate("hot_water_production")
         },
         "update_entity": "thermal_power"
     },
@@ -926,13 +1587,13 @@ sensor_configuration = [
         "data_offset": 5,
         "data_size": 1,
         "map": {
-            0x01: "Bereitschaft",
-            0x03: "Heizen",
-            0x04: "Absenken",
-            0x05: "Sommer",
-            0x11: "Kühlen",
-            0x0B: "Automatik 1",
-            0x0C: "Automatik 2"
+            0x01: delayed_translate("standby"),
+            0x03: delayed_translate("heating"),
+            0x04: delayed_translate("lowering"),
+            0x05: delayed_translate("summer"),
+            0x11: delayed_translate("cooling"),
+            0x0B: delayed_translate("automatic_1"),
+            0x0C: delayed_translate("automatic_2"),
         }
     },
     {
@@ -943,9 +1604,9 @@ sensor_configuration = [
         "data_offset": 6,
         "data_size": 1,
         "map": {
-            0x00: "Aus",
-            0x01: "An",
-            0x02: "Nur bei Nacht"
+            0x00: delayed_translate("off"),
+            0x01: delayed_translate("on"),
+            0x02: delayed_translate("night_only")
         }
     },
     {
@@ -956,64 +1617,64 @@ sensor_configuration = [
         "data_offset": 5,
         "data_size": 2,
         "map": {
-            0: "Kein Fehler",
-            9001: "E9001 Rücklauffühler",
-            9002: "E9002 Vorlauffühler",
-            9003: "E9003 Frostschutzfunktion",
-            9004: "E9004 Durchfluss",
-            9005: "E9005 Vorlauftemperaturfühler",
-            9006: "E9006 Vorlauftemperaturfühler",
-            9007: "E9007 Platine IG defekt",
-            9008: "E9008 Kältemitteltemperatur außerhalb des Bereiches",
-            9009: "E9009 STB Fehler",
-            9010: "E9010 STB Fehler",
-            9011: "E9011 Fehler Flowsensor",
-            9012: "E9012 Fehler Vorlauffühler",
-            9013: "E9013 Platine AG defekt",
-            9014: "E9014 P-Kältemittel hoch",
-            9015: "E9015 P-Kältemittel niedrig",
-            9016: "E9016 Lastschutz Verdichter",
-            9017: "E9017 Ventilator blockiert",
-            9018: "E9018 Expansionsventil",
-            9019: "E9019 Warmwassertemperatur > 85°C",
-            9020: "E9020 T-Verdampfer hoch",
-            9021: "E9021 HPS-System",
-            9022: "E9022 Fehler AT-Fühler",
-            9023: "E9023 Fehler WW-Fühler",
-            9024: "E9024 Drucksensor",
-            9025: "E9025 Fehler Rücklauffühler",
-            9026: "E9026 Drucksensor",
-            9027: "E9027 Aircoil-Fühler Defrost",
-            9028: "E9028 Aircoil-Fühler temp",
-            9029: "E9029 Fehler Kältefühler AG",
-            9030: "E9030 Defekt elektrisch",
-            9031: "E9031 Defekt elektrisch",
-            9032: "E9032 Defekt elektrisch",
-            9033: "E9033 Defekt elektrisch",
-            9034: "E9034 Defekt elektrisch",
-            9035: "E9035 Platine AG defekt",
-            9036: "E9036 Defekt elektrisch",
-            9037: "E9037 Einstellung Leistung",
-            9038: "E9038 Kältemittel Leck",
-            9039: "E9039 Unter/Überspannung",
-            9041: "E9041 Übertragungsfehler",
-            9042: "E9042 Übertragungsfehler",
-            9043: "E9043 Übertragungsfehler",
-            9044: "E9044 Übertragungsfehler",
-            75: "E75 Fehler Außentemperaturfühler",
-            76: "E76 Fehler Speichertemperaturfühler",
-            81: "E81 Kommunikationsfehler Rocon",
-            88: "E88 Kommunikationsfehler Rocon Handbuch",
-            91: "E91 Kommunikationsfehler Rocon Handbuch",
-            128: "E128 Fehler Rücklauftemperaturfühler",
-            129: "E129 Fehler Drucksensor",
-            198: "E198 Durchflussmessung nicht plausibel",
-            200: "E200 Kommunikationsfehler",
-            8005: "E8005 Wasserdruck in Heizungsanlage zu gering",
-            8100: "E8100 Kommunikation",
-            9000: "E9000 Interne vorübergehende Meldung",
-            8006: "W8006 Warnung Druckverlust",
-            8007: "W8007 Wasserdruck in Anlage zu hoch"
+            0: delayed_translate("err_0"),
+            9001: delayed_translate("err_E9001"),
+            9002: delayed_translate("err_E9002"),
+            9003: delayed_translate("err_E9003"),
+            9004: delayed_translate("err_E9004"),
+            9005: delayed_translate("err_E9005"),
+            9006: delayed_translate("err_E9006"),
+            9007: delayed_translate("err_E9007"),
+            9008: delayed_translate("err_E9008"),
+            9009: delayed_translate("err_E9009"),
+            9010: delayed_translate("err_E9010"),
+            9011: delayed_translate("err_E9011"),
+            9012: delayed_translate("err_E9012"),
+            9013: delayed_translate("err_E9013"),
+            9014: delayed_translate("err_E9014"),
+            9015: delayed_translate("err_E9015"),
+            9016: delayed_translate("err_E9016"),
+            9017: delayed_translate("err_E9017"),
+            9018: delayed_translate("err_E9018"),
+            9019: delayed_translate("err_E9019"),
+            9020: delayed_translate("err_E9020"),
+            9021: delayed_translate("err_E9021"),
+            9022: delayed_translate("err_E9022"),
+            9023: delayed_translate("err_E9023"),
+            9024: delayed_translate("err_E9024"),
+            9025: delayed_translate("err_E9025"),
+            9026: delayed_translate("err_E9026"),
+            9027: delayed_translate("err_E9027"),
+            9028: delayed_translate("err_E9028"),
+            9029: delayed_translate("err_E9029"),
+            9030: delayed_translate("err_E9030"),
+            9031: delayed_translate("err_E9031"),
+            9032: delayed_translate("err_E9032"),
+            9033: delayed_translate("err_E9033"),
+            9034: delayed_translate("err_E9034"),
+            9035: delayed_translate("err_E9035"),
+            9036: delayed_translate("err_E9036"),
+            9037: delayed_translate("err_E9037"),
+            9038: delayed_translate("err_E9038"),
+            9039: delayed_translate("err_E9039"),
+            9041: delayed_translate("err_E9041"),
+            9042: delayed_translate("err_E9042"),
+            9043: delayed_translate("err_E9043"),
+            9044: delayed_translate("err_E9044"),
+            75: delayed_translate("err_E75"),
+            76: delayed_translate("err_E76"),
+            81: delayed_translate("err_E81"),
+            88: delayed_translate("err_E88"),
+            91: delayed_translate("err_E91"),
+            128: delayed_translate("err_E128"),
+            129: delayed_translate("err_E129"),
+            198: delayed_translate("err_E198"),
+            200: delayed_translate("err_E200"),
+            8005: delayed_translate("err_E8005"),
+            8100: delayed_translate("err_E8100"),
+            9000: delayed_translate("err_E9000"),
+            8006: delayed_translate("err_W8006"),
+            8007: delayed_translate("err_W8007")
         }
     },
     {
@@ -1060,8 +1721,8 @@ sensor_configuration = [
         "data_offset": 6,
         "data_size": 1,
         "map": {
-            0x00: "Witterungsgeführt",
-            0x01: "Fest"
+            0x00: delayed_translate("weather_dependent"),
+            0x01: delayed_translate("fixed")
         }
     },
     {
@@ -1072,9 +1733,9 @@ sensor_configuration = [
         "data_offset": 6,
         "data_size": 1,
         "map": {
-            0x00: "Aus",
-            0x01: "SG Modus 1",
-            0x02: "SG Modus 2"
+            0x00: delayed_translate("off"),
+            0x01: delayed_translate("sg_mode_1"),
+            0x02: delayed_translate("sg_mode_2")
         }
     },
     {
@@ -1085,8 +1746,8 @@ sensor_configuration = [
         "data_offset": 6,
         "data_size": 1,
         "map": {
-            0x00: "Aus",
-            0x01: "An"
+            0x00: delayed_translate("off"),
+            0x01: delayed_translate("on")
         }
     },
     {
@@ -1097,10 +1758,10 @@ sensor_configuration = [
         "data_offset": 6,
         "data_size": 1,
         "map": {
-            0x00: "Kein zusätzlicher Wärmeerzeuger",
-            0x01: "Optionaler Backup-Heater",
-            0x02: "WEZ für WW und HZ",
-            0x03: "WEZ1 für WW - WEZ2 für HZ"
+            0x00: delayed_translate("no_additional_heat_generator"),
+            0x01: delayed_translate("optional_backup_heater"),
+            0x02: delayed_translate("wez_for_hot_water_and_heating"),
+            0x03: delayed_translate("wez1_for_hot_water_wez2_for_heating")
         }
     },
     {
@@ -1111,8 +1772,8 @@ sensor_configuration = [
         "data_offset": 6,
         "data_size": 1,
         "map": {
-            0x00: "Aus",
-            0x01: "An"
+            0x00: delayed_translate("off"),
+            0x01: delayed_translate("on")
         }
     },
     {
@@ -1216,7 +1877,7 @@ sensor_configuration = [
         "data_offset": 5,
         "data_size": 2,
         "map": {
-            0x00: "Aus",
+            0x00: delayed_translate("off"),
             0x03: "3 kW",
             0x06: "6 kW",
             0x09: "9 kW"
@@ -1244,10 +1905,10 @@ sensor_configuration = [
         "data_size": 1,
         "map": {
             0x00: "---",
-            0x03: "SGN - Normaler Modus",
-            0x04: "SG1 - WW & HZ ausgeschalten",
-            0x05: "SG2 - WW & HZ + 5°C",
-            0x06: "SG3 - WW 70°C"
+            0x03: delayed_translate("sgn_normal_mode"),
+            0x04: delayed_translate("sg1_hot_water_and_heating_off"),
+            0x05: delayed_translate("sg2_hot_water_and_heating_plus_5c"),
+            0x06: delayed_translate("sg3_hot_water_70c")
         }
     },
 
@@ -1317,8 +1978,8 @@ sensor_configuration = [
         "name": "optimized_defrosting",
         "icon": "mdi:snowflake-melt",
         "map": {
-            0x00: "Aus",
-            0x01: "An"
+            0x00: delayed_translate("off"),
+            0x01: delayed_translate("on")
         }
     }
 ]
@@ -1349,6 +2010,7 @@ DEFAULT_MAX_SPREAD_TVBH_TV = 3.0
 DEFAULT_MAX_SPREAD_TVBH_TR = 3.0
 
 entity_schemas = {}
+
 for sensor_conf in sensor_configuration:
     name = sensor_conf.get("name")
     icon = sensor_conf.get("icon", sensor._UNDEF)
@@ -1445,6 +2107,7 @@ CONFIG_SCHEMA = cv.Schema(
         cv.Optional(CONF_UPDATE_INTERVAL, default=DEFAULT_UPDATE_INTERVAL): cv.uint16_t,
         cv.Optional(CONF_MAX_SPREAD_TVBH_TV, default=DEFAULT_MAX_SPREAD_TVBH_TV): cv.float_,
         cv.Optional(CONF_MAX_SPREAD_TVBH_TR, default=DEFAULT_MAX_SPREAD_TVBH_TR): cv.float_,
+        cv.Optional(CONF_LANGUAGE, default="en"): cv.string,
 
         ########## Texts ##########
 
@@ -1480,6 +2143,11 @@ CONFIG_SCHEMA = cv.Schema(
 ).extend(cv.COMPONENT_SCHEMA)
 
 async def to_code(config):
+
+    if CONF_LANGUAGE in config:
+        lang = config[CONF_LANGUAGE]
+        set_language(lang)
+
     global_ns = MockObj("", "")
     std_array_u8_7_const_ref = std_ns.class_("array<uint8_t, 7> const&")
     std_array_u8_7_ref = std_ns.class_("array<uint8_t, 7>&")
@@ -1493,6 +2161,9 @@ async def to_code(config):
         cg.add(var.set_canbus(canbus))
 
     cg.add(var.set_max_spread(config[CONF_MAX_SPREAD_TVBH_TV], config[CONF_MAX_SPREAD_TVBH_TR]))
+
+    # Write cpp translation file
+    write_cpp_file(os.path.dirname(__file__), current_language)
 
     ########## Texts ##########
 
@@ -1521,7 +2192,10 @@ async def to_code(config):
                 entity = None
                 divider = sens_conf.get("divider", 1.0)
 
-                mapping = sens_conf.get("map", {})
+                # translate both map and name (if auto)
+                mapping = apply_translation_to_mapping(sens_conf.get("map", {}))
+                apply_translation_to_entityname(yaml_sensor_conf,sens_conf.get("name"))
+
                 if yaml_sensor_conf.get("type") == "select" and "options" in yaml_sensor_conf:
                     mapping = yaml_sensor_conf.get("options")
                 str_map = "|".join([f"0x{int(key * divider) & 0xFFFF :02X}:{value}" for key, value in mapping.items()])
@@ -1604,6 +2278,7 @@ async def to_code(config):
         ########## Sensors ##########
 
         if yaml_sensor_conf := entities.get(CONF_THERMAL_POWER):
+            apply_translation_to_entityname(yaml_sensor_conf, CONF_THERMAL_POWER)
             sens = await sensor.new_sensor(yaml_sensor_conf)
             cg.add(var.set_thermal_power_sensor(sens))
 

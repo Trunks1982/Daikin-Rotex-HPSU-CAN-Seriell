@@ -1,6 +1,7 @@
 #include "esphome/components/daikin_rotex_can/daikin_rotex_can.h"
 #include "esphome/components/daikin_rotex_can/entity.h"
 #include "esphome/components/daikin_rotex_can/sensors.h"
+#include "esphome/components/daikin_rotex_can/translations.h"
 #include <string>
 #include <vector>
 
@@ -12,7 +13,7 @@ static const char* BETRIEBS_ART = "mode_of_operating";
 static const char* BETRIEBS_MODUS = "operating_mode";
 static const char* OPTIMIZED_DEFROSTING = "optimized_defrosting";
 static const char* TEMPERATURE_ANTIFREEZE = "temperature_antifreeze";   // T-Frostschutz
-static const char* TEMPERATURE_ANTIFREEZE_OFF = "Aus";
+static const char* TEMPERATURE_ANTIFREEZE_OFF = translate("off").c_str();
 static const uint32_t POST_SETUP_TIMOUT = 15*1000;
 
 DaikinRotexCanComponent::DaikinRotexCanComponent()
@@ -114,9 +115,9 @@ void DaikinRotexCanComponent::update_thermal_power() {
             CanSensor const* tr = m_entity_manager.get_sensor("tr");
 
             float value = 0;
-            if (p_betriebs_art->state == "Warmwasserbereitung" && tv != nullptr && tr != nullptr) {
+            if (p_betriebs_art->state == translate("hot_water_production") && tv != nullptr && tr != nullptr) {
                 value = (tv->state - tr->state) * (4.19 * flow_rate->state) / 3600.0f;
-            } else if ((p_betriebs_art->state == "Heizen" || p_betriebs_art->state == "Kühlen") && tvbh != nullptr && tr != nullptr) {
+            } else if ((p_betriebs_art->state == translate("heating") || p_betriebs_art->state == translate("cooling")) && tvbh != nullptr && tr != nullptr) {
                 value = (tvbh->state - tr->state) * (4.19 * flow_rate->state) / 3600.0f;
             }
             m_thermal_power_sensor->publish_state(value);
@@ -146,13 +147,13 @@ void DaikinRotexCanComponent::on_betriebsart(TEntity::TVariant const& current, T
     CanSelect* p_betriebs_modus = m_entity_manager.get_select(BETRIEBS_MODUS);
     if (m_optimized_defrosting.value() && p_betriebs_modus != nullptr) {
         if (std::holds_alternative<std::string>(current)) {
-            if (std::get<std::string>(current) == "Abtauen" && p_betriebs_modus->state != "Sommer") {
+            if (std::get<std::string>(current) == translate("defrosting") && p_betriebs_modus->state != translate("summer")) {
                 m_entity_manager.sendSet(p_betriebs_modus->get_name(), 0x05); // Sommer
-            } else if (std::get<std::string>(current) == "Heizen" && p_betriebs_modus->state != "Heizen") {
+            } else if (std::get<std::string>(current) == translate("heating") && p_betriebs_modus->state != translate("heating")) {
                 m_entity_manager.sendSet(p_betriebs_modus->get_name(), 0x03); // Heizen
-            } else if (std::get<std::string>(current) == "Standby" && p_betriebs_modus->state != "Heizen") {
+            } else if (std::get<std::string>(current) == translate("standby") && p_betriebs_modus->state != translate("heating")) {
                 m_entity_manager.sendSet(p_betriebs_modus->get_name(), 0x03); // Heizen
-            } else if (std::get<std::string>(current) == "Warmwasserbereitung" && std::get<std::string>(previous) == "Abtauen" && p_betriebs_modus->state != "Heizen") {
+            } else if (std::get<std::string>(current) == translate("hot_water_production") && std::get<std::string>(previous) == translate("defrosting") && p_betriebs_modus->state != translate("heating")) {
                 m_entity_manager.sendSet(p_betriebs_modus->get_name(), 0x03); // Heizen
             }
         } else {
@@ -312,14 +313,14 @@ std::string DaikinRotexCanComponent::recalculate_state(EntityBase* pEntity, std:
             if (tvbh->state > (tv->state + m_max_spread.tvbh_tv) && dhw_mixer_position->state == 0.0f && flow_rate->state > 600.0f) {
                 ESP_LOGE(TAG, "3UV DHW defekt => tvbh: %f, tv: %f, max_spread: %f, bpv: %f, flow_rate: %f",
                     tvbh->state, tv->state, m_max_spread.tvbh_tv, dhw_mixer_position->state, flow_rate->state);
-                return new_state + "|3UV DHW defekt";
+                return new_state + "|3UV DHW " + translate("defect");
             }
         }
         if (tvbh != nullptr && tr != nullptr && bpv != nullptr && flow_rate != nullptr) {
             if (tvbh->state > (tr->state + m_max_spread.tvbh_tr) && bpv->state == 100.0f && millis() > (bpv->getLastValueChange() + delay) && flow_rate->state > 600.0f) {
                 ESP_LOGE(TAG, "3UV BPV defekt => tvbh: %f, tr: %f, max_spread: %f, dhw_mixer_pos: %f, flow_rate: %f",
                     tvbh->state, tr->state, m_max_spread.tvbh_tr, bpv->state, flow_rate->state);
-                return new_state + "|3UV BPV defekt";
+                return new_state + "|3UV BPV "+ translate("defect");
             }
         }
     }
