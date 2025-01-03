@@ -130,7 +130,7 @@ entities:
 
 #mode
     ext:
-      name: auto
+      name: auto # if set to auto, the name will be translated from dictionary in the specified language
 #RT
 #Pump
 #EHS
@@ -152,7 +152,7 @@ entities:
 #TR2
 #Tdhw2
     tliq:
-      name: auto # if set to auto, the name will be translated from dictionary in the specified language
+      name: auto 
     ta2:
       name: auto
 #quiet
