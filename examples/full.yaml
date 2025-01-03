@@ -124,7 +124,7 @@ daikin_rotex_can:
   project_git_hash:
     name: Project Git Hash
 
-entities:
+  entities:
 
 # Info
 
