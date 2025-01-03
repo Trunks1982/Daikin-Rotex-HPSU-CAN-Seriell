@@ -570,7 +570,7 @@ SUPPORTED_LANGUAGES = ['en', 'de', 'it']
 
 # Current language
 current_language = "de"
-delayed_translate_tag: str = "#translate#"
+delayed_translate_tag = "DELAYED_TRANSLATE:"
 
 def set_language(lang):
     global current_language
@@ -618,9 +618,6 @@ def apply_translation_to_mapping(mapping: dict) -> dict:
 def apply_translation_to_entityname(yaml_sensor_conf, id):
     if "name" in yaml_sensor_conf and yaml_sensor_conf["name"].strip() == "auto":
         yaml_sensor_conf["name"] = translate(id)
-
-# Esempio di implementazione
-delayed_translate_tag = "DELAYED_TRANSLATE:"
 
 # Generate translation.cpp, creating translation dictionary from python one
 def generate_cpp_translations_for_language(translations, selected_language, keys_to_include=None):
