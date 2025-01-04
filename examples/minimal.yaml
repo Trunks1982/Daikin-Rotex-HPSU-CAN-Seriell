@@ -39,8 +39,10 @@ canbus:                   # Required for communication with the Daikin or Rotex 
 daikin_rotex_can:
   id: rotext_hpsu
   canbus_id: can_bus
+  # tranlation language, supported: de, en, it. If not set, the default language is de
+  language: de  
   project_git_hash:
     name: Project Git Hash
   entities:
     tdhw1:
-      name: Warmwassertemperatur
+      name: auto # if set to auto, the name will be translated from dictionary in the specified language
