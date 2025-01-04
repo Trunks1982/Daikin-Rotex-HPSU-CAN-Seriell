@@ -381,7 +381,7 @@ translations = {
     "it": {  # Italian
         "heating": "Riscaldamento",
         "cooling": "Raffreddamento",
-        "standby": "Pronto",
+        "standby": "Standby",
         "hot_water_production": "Produzione di Acqua Calda",
         "defrosting": "Sbrinamento",
         "optimized_defrosting": "Sbrinamento Ottimizzato",
@@ -490,7 +490,7 @@ translations = {
         "t_hs": "T-WE",
         "t_ext": "T-Esterno",
         "flow_rate": "Portata",
-        "status_kesselpumpe": "Stato Pompa Caldaia",
+        "status_kesselpumpe": "Stato Pompa Circolazione",
         "runtime_compressor": "Tempo di Funzionamento Compressore",
         "runtime_pump": "Tempo di Funzionamento Pompa",
         "dhw_mixer_position": "Posizione Miscelatore ACS",
@@ -514,7 +514,7 @@ translations = {
         "ch_support": "Supporto CH",
         "smart_grid": "Rete Intelligente",
         "sg_mode": "Modalità SG",
-        "external_temp_sensor": "Configurazione Sensore Temperatura Esterna",
+        "external_temp_sensor": "Sensore Temperatura Esterna",
         "power_dhw": "Potenza ACS",
         "power_ehs_1": "Potenza EHS Livello 1",
         "power_ehs_2": "Potenza EHS Livello 2",
@@ -2104,7 +2104,7 @@ CONFIG_SCHEMA = cv.Schema(
         cv.Optional(CONF_UPDATE_INTERVAL, default=DEFAULT_UPDATE_INTERVAL): cv.uint16_t,
         cv.Optional(CONF_MAX_SPREAD_TVBH_TV, default=DEFAULT_MAX_SPREAD_TVBH_TV): cv.float_,
         cv.Optional(CONF_MAX_SPREAD_TVBH_TR, default=DEFAULT_MAX_SPREAD_TVBH_TR): cv.float_,
-        cv.Optional(CONF_LANGUAGE, default="de"): cv.string,
+        cv.Optional(CONF_LANGUAGE, default="de"): cv.one_of(*SUPPORTED_LANGUAGES, str=True),
 
         ########## Texts ##########
 
