@@ -512,7 +512,7 @@ translations = {
         "indoor_unit": "Unità Interna",
         "function_ehs": "Funzione EHS",
         "ch_support": "Supporto CH",
-        "smart_grid": "Rete Intelligente",
+        "smart_grid": "Smart Grid",
         "sg_mode": "Modalità SG",
         "external_temp_sensor": "Sensore Temperatura Esterna",
         "power_dhw": "Potenza ACS",
@@ -556,7 +556,7 @@ translations = {
         "circulation_pump_max": "Pompa di Circolazione Massima",
         "dhw_run": "Esecuzione ACS",
         "error_code": "Codice di Errore",
-        "mode_of_operating": "Modalità di Operatività",
+        "mode_of_operating": "Stato operativo",
         "status_kompressor": "Stato Compressore",
         "tdhw1": "Temperatura Acqua Calda",
         "target_supply_temperature": "Temperatura Mandata Obiettivo"        
