@@ -2282,5 +2282,6 @@ async def to_code(config):
         ########## Buttons ##########
 
         if button_conf := entities.get(CONF_DHW_RUN):
+            apply_translation_to_entityname(button_conf, CONF_DHW_RUN)
             but = await button.new_button(button_conf)
             await cg.register_parented(but, var)
