@@ -1351,7 +1351,8 @@ CONF_PROJECT_GIT_HASH = "project_git_hash"
 
 ########## Sensors ##########
 
-CONF_THERMAL_POWER = "thermal_power" # Thermische Leistung
+CONF_THERMAL_POWER = "thermal_power"
+CONF_THERMAL_POWER_SMOOTH = "thermal_power_smooth"
 
 CONF_DUMP = "dump"
 CONF_DHW_RUN = "dhw_run"
@@ -1436,6 +1437,12 @@ entity_schemas.update({
     ########## Sensors ##########
 
     cv.Optional(CONF_THERMAL_POWER): sensor.sensor_schema(
+        device_class=DEVICE_CLASS_POWER,
+        unit_of_measurement=UNIT_KILOWATT,
+        accuracy_decimals=2,
+        state_class=STATE_CLASS_MEASUREMENT
+    ).extend(),
+    cv.Optional(CONF_THERMAL_POWER_SMOOTH): sensor.sensor_schema(
         device_class=DEVICE_CLASS_POWER,
         unit_of_measurement=UNIT_KILOWATT,
         accuracy_decimals=2,
@@ -1623,13 +1630,16 @@ async def to_code(config):
                     "handle_lambda" in sens_conf,
                     "set_lambda" in sens_conf
                 ]))
-                cg.add(var.add_entity(entity));
+                cg.add(var.add_entity(entity))
 
         ########## Sensors ##########
 
         if yaml_sensor_conf := entities.get(CONF_THERMAL_POWER):
             sens = await sensor.new_sensor(yaml_sensor_conf)
             cg.add(var.set_thermal_power_sensor(sens))
+        if yaml_sensor_conf := entities.get(CONF_THERMAL_POWER_SMOOTH):
+            sens = await sensor.new_sensor(yaml_sensor_conf)
+            cg.add(var.set_thermal_power_sensor_smooth(sens))
 
         ########## Buttons ##########
 

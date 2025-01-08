@@ -31,6 +31,8 @@ public:
     CanTextSensor* get_text_sensor(std::string const& id);
     CanTextSensor const* get_text_sensor(std::string const& id) const;
 
+    CanBinarySensor const* get_binary_sensor(std::string const& id) const;
+
     CanSelect* get_select(std::string const& id);
 
     bool sendNextPendingGet();

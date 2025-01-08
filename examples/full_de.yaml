@@ -376,6 +376,8 @@ daikin_rotex_can:
       name: Heizstäbe - Für Pumpen nach Oktober 2018
     thermal_power:
       name: Thermische Leistung
+    thermal_power_smooth:
+      name: Thermische Leistung Smooth
     optimized_defrosting:
       name: Abtau-Optimierung
 

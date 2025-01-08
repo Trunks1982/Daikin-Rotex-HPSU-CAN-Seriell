@@ -4,6 +4,7 @@
 #include "esphome/components/daikin_rotex_can/translations.h"
 #include <string>
 #include <vector>
+#include <limits>
 
 namespace esphome {
 namespace daikin_rotex_can {
@@ -30,6 +31,8 @@ DaikinRotexCanComponent::DaikinRotexCanComponent()
 , m_project_git_hash_sensor(nullptr)
 , m_project_git_hash()
 , m_thermal_power_sensor(nullptr)
+, m_thermal_power_smooth_sensor(nullptr)
+, m_pid(0.1, 0.01, 0.001)
 {
 }
 
@@ -111,24 +114,29 @@ void DaikinRotexCanComponent::updateState(std::string const& id) {
 }
 
 void DaikinRotexCanComponent::update_thermal_power() {
-    text_sensor::TextSensor* p_betriebs_art = m_entity_manager.get_text_sensor(BETRIEBS_ART);
+    CanSensor const* flow_rate = m_entity_manager.get_sensor("flow_rate");
+    CanSensor const* tv = m_entity_manager.get_sensor("tv");
+    CanSensor const* tr = m_entity_manager.get_sensor("tr");
 
-    if (p_betriebs_art != nullptr && m_thermal_power_sensor != nullptr) {
-        CanSensor const* flow_rate = m_entity_manager.get_sensor("flow_rate");
-        if (flow_rate != nullptr) {
-            CanSensor const* tvbh = m_entity_manager.get_sensor("tvbh");
-            CanSensor const* tv = m_entity_manager.get_sensor("tv");
-            CanSensor const* tr = m_entity_manager.get_sensor("tr");
-
-            float value = 0;
-            if (p_betriebs_art->state == STATE_DHW_PRODUCTION && tv != nullptr && tr != nullptr) {
-                value = (tv->state - tr->state) * (4.19 * flow_rate->state) / 3600.0f;
-            } else if ((p_betriebs_art->state == STATE_HEATING || p_betriebs_art->state == STATE_COOLING) && tvbh != nullptr && tr != nullptr) {
-                value = (tvbh->state - tr->state) * (4.19 * flow_rate->state) / 3600.0f;
-            }
-            m_thermal_power_sensor->publish_state(value);
-        }
+    if (m_thermal_power_sensor == nullptr) {
+        ESP_LOGE(TAG, "thermal_power is not configured!");
+        return;
     }
+    if (flow_rate == nullptr) {
+        ESP_LOGE(TAG, "flow_rate is not configured!");
+        return;
+    }
+    if (tv == nullptr) {
+        ESP_LOGE(TAG, "tv is not configured!");
+        return;
+    }
+    if (tr == nullptr) {
+        ESP_LOGE(TAG, "tr is not configured!");
+        return;
+    }
+
+    const float value = (tv->state - tr->state) * (4.19 * flow_rate->state) / 3600.0f;
+    m_thermal_power_sensor->publish_state(value);
 }
 
 bool DaikinRotexCanComponent::on_custom_select(std::string const& id, uint8_t value) {
@@ -268,6 +276,22 @@ void DaikinRotexCanComponent::loop() {
         } else {
             ++it;
         }
+    }
+
+    if (millis() > m_pid.get_last_update() + 10 * 1000) {
+        float current_tp = m_thermal_power_sensor->get_state();
+
+        const float smoothing_factor = 0.1;
+        float smoothed_tp = m_thermal_power_smooth_sensor->get_state();
+        if (std::isnan(smoothed_tp)) {
+            smoothed_tp = current_tp;
+        }
+        smoothed_tp += 0.1 * (current_tp - smoothed_tp);
+        smoothed_tp = std::ceil(smoothed_tp * 100.0) / 100.0;
+
+        m_thermal_power_smooth_sensor->publish_state(smoothed_tp);
+
+        m_pid.set_last_update(millis());
     }
 }
 

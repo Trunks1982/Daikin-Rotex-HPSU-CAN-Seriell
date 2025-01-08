@@ -3,6 +3,7 @@
 #include "esphome/components/daikin_rotex_can/persistent_value.h"
 #include "esphome/components/daikin_rotex_can/entity_manager.h"
 #include "esphome/components/daikin_rotex_can/sensors.h"
+#include "esphome/components/daikin_rotex_can/pid.h"
 #include "esphome/components/esp32_can/esp32_can.h"
 #include "esphome/core/component.h"
 #include <list>
@@ -27,6 +28,7 @@ public:
     void set_update_interval(uint16_t seconds) {} // dummy
     void set_project_git_hash(text_sensor::TextSensor* pSensor, std::string const& hash) { m_project_git_hash_sensor = pSensor; m_project_git_hash = hash; }
     void set_thermal_power_sensor(sensor::Sensor* pSensor) { m_thermal_power_sensor = pSensor; }
+    void set_thermal_power_sensor_smooth(sensor::Sensor* pSensor) { m_thermal_power_smooth_sensor = pSensor; }
     void set_max_spread(float tvbh_tv, float tvbh_tr) { m_max_spread = { tvbh_tv, tvbh_tr };}
     void add_entity(EntityBase* pEntity) {
         if (TEntity* pRequest = dynamic_cast<TEntity*>(pEntity)) {
@@ -91,7 +93,9 @@ private:
     esphome::esp32_can::ESP32Can* m_pCanbus;
 
     sensor::Sensor* m_thermal_power_sensor;
+    sensor::Sensor* m_thermal_power_smooth_sensor;
     MaxSpread m_max_spread;
+    PID m_pid;
 };
 
 inline void DaikinRotexCanComponent::set_canbus(esphome::esp32_can::ESP32Can* pCanbus) {

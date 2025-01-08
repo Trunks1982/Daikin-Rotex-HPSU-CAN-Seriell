@@ -78,7 +78,7 @@ CanTextSensor* TEntityManager::get_text_sensor(std::string const& id) {
     } else if (pEntity) {
         ESP_LOGE(TAG, "Entity is not a text sensor: %s", pEntity->get_name().c_str());
     } else {
-        ESP_LOGE(TAG, "toTextSensor() => Entity is null!");
+        ESP_LOGE(TAG, "get_text_sensor() => Entity is null!");
     }
     return nullptr;
 }
@@ -90,7 +90,19 @@ CanTextSensor const* TEntityManager::get_text_sensor(std::string const& id) cons
     } else if (pEntity) {
         ESP_LOGE(TAG, "Entity is not a text sensor: %s", pEntity->get_name().c_str());
     } else {
-        ESP_LOGE(TAG, "Const toTextSensor() => Entity is null!");
+        ESP_LOGE(TAG, "const get_text_sensor() => Entity is null!");
+    }
+    return nullptr;
+}
+
+CanBinarySensor const* TEntityManager::get_binary_sensor(std::string const& id) const {
+    EntityBase const* pEntity = get_entity_base(id);
+    if (CanBinarySensor const* pBinarySensor = dynamic_cast<CanBinarySensor const*>(pEntity)) {
+        return pBinarySensor;
+    } else if (pEntity) {
+        ESP_LOGE(TAG, "Entity is not a binary sensor: %s", pEntity->get_name().c_str());
+    } else {
+        ESP_LOGE(TAG, "const get_binary_sensor() => Entity is null!");
     }
     return nullptr;
 }
