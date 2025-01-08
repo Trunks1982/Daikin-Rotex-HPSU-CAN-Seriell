@@ -300,6 +300,8 @@ daikin_rotex_can:
       name: Resistenze Elettriche - Per Pompe dopo Ottobre 2018
     thermal_power:
       name: Potenza Termica
+    thermal_power_smooth:
+      name: Potenza Termica Regolare        
     optimized_defrosting:
       name: Sbrinamento Ottimizzato
     bypass_valve:

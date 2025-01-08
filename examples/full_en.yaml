@@ -300,6 +300,8 @@ daikin_rotex_can:
       name: Electric Heater - For Pumps After October 2018
     thermal_power:
       name: Thermal Power
+    thermal_power_smooth:
+      name: Thermal Power Smooth      
     optimized_defrosting:
       name: Optimized Defrosting
     bypass_valve:
