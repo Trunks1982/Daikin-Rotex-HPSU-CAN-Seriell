@@ -109,9 +109,8 @@ canbus:
 
 daikin_rotex_can:
   id: rotext_hpsu
+  language: it
   canbus_id: can_bus
-  # tranlation language, supported: de, en, it. If not set, the default language is de
-  language: de
   update_interval: 30
   #max_spread_tvbh_tv: 4
   #max_spread_tvbh_tr: 4
@@ -123,282 +122,203 @@ daikin_rotex_can:
     name: Dump Senors
   project_git_hash:
     name: Project Git Hash
-
   entities:
 
-# Info
+    # Info
 
-#mode
+    # mode
     ext:
-      name: auto # if set to auto, the name will be translated from dictionary in the specified language
-#RT
-#Pump
-#EHS
-#BPV
+      name: Esterno
+    # RT
+    # Pump
+    # EHS
+    # BPV
     tv:
-      name: auto
+      name: Temperatura di mandata (TV)
       update_interval: 5
     tvbh:
-      name: auto
+      name: Temperatura Mandata Riscaldamento (TVBH)
       update_interval: 5
     tr:
-      name: auto
+      name: Temperatura Ritorno Riscaldamento
       update_interval: 5
-#Tdhw
-    temperature_outside:  # ta
-      name: auto
-#V
-#TVBH2
-#TR2
-#Tdhw2
+    # Tdhw
+    temperature_outside:
+      name: Temperatura Esterna
+    # V
+    # TVBH2
+    # TR2
+    # Tdhw2
     tliq:
-      name: auto 
+      name: Temperatura linea liquido
     ta2:
-      name: auto
-#quiet
+      name: TA2
+    # quiet
 
-#Übersicht
+  # Übersicht
     water_pressure:
-      name: auto
+      name: Pressione dell'Acqua
     t_hs:
-      name: auto
-#T-WE Soll
-    t_ext:  # Oder gehört hier temperature_outside rein?
-      name: auto
-#T-WW
-#T-WW Soll
-#T-Rücklauf
+      name: T-WE
+    t_ext:
+      name: T-Esterno
     flow_rate:
-      name: auto
+      name: Portata
       update_interval: 10
-#T-HK
-#T-HK Soll
     status_kesselpumpe:
-      name: auto
+      name: Stato Pompa Circolazione
     runtime_compressor:
-      name: auto
+      name: Tempo di Funzionamento Compressore
     runtime_pump:
-      name: auto
+      name: Tempo di Funzionamento Pompa
     dhw_mixer_position:
-      name: auto
+      name: Posizione Miscelatore ACS
     qboh:
-      name: auto
+      name: EHS per ACS
     ehs_for_ch:
-      name: auto
+      name: EHS per CH
     energy_cooling:
-      name: auto
+      name: Energia Raffreddamento
     qch:
-      name: auto
+      name: Energia Riscaldamento
     total_energy_produced:
-      name: auto
+      name: Energia Totale Prodotta
     qdhw:
-      name: auto
+      name: Energia per ACS
     total_electrical_energy:
-      name: auto
-#WE Typ
-#SwNr B1/U1
-#SwNr Regler
-#SwNr RTXRT
+      name: Energia Elettrica Totale
 
-# ESP custom sensors
+  # ESP custom sensors
     energy_saving_mode:
-      name: auto
+      name: Modalità Risparmio Energetico
 
-# Betriebsart
+  # Betriebsart
     operating_mode:
-      name: auto
+      name: Modalità di Funzionamento
       update_interval: 5
 
-# Raum Soll Tag
+  # Raum Soll Tag
     target_room1_temperature:
-      name: auto
+      name: Temperatura Obiettivo Stanza 1
       type: select
-  # T-RaumSoll 2
-  # T-RaumSoll 3
 
-# Raum Soll Nacht
-  # T-Absenkung
-  # T-Abwesend
-
-# WW Solltemp
+  # Raum Soll Nacht
     target_hot_water_temperature:
-      name: auto
+      name: Temperatura Obiettivo ACS
       type: select
 
-  # T-WWSoll 2
-  # T-WWSoll 3
-
-# WW Install
+  # WW Install
     1_dhw:
-      name: auto
+      name: 1 x Acqua Calda
     hp_hyst_tdhw:
-      name: auto
+      name: HP Hyst TDHW
     delay_time_for_backup_heating:
-      name: auto
+      name: Tempo di Attesa per Riscaldamento di Backup
 
-#Konfiguration
-
-#Konfiguration -> Installation
-#...
+  # Konfiguration
     outdoor_unit:
-      name: auto
+      name: Unità Esterna
     indoor_unit:
-      name: auto
+      name: Unità Interna
     function_ehs:
-      name: auto
+      name: Funzione EHS
     ch_support:
-      name: auto
-#Bivalenzfunktion
+      name: Supporto CH
     smart_grid:
-      name: auto
+      name: Smart Grid
     sg_mode:
-      name: auto
-#HT/NT Funktion
-#HT/NT Anschluss
-#Raumthermostat
-#Interlinkfunktion
-#Konfig MFR 1
-#Entlüftungsfunktion
-#PWM Konfig
-#...
-#Sensor Konfig
+      name: Modalità SG
     external_temp_sensor:
-      name: auto
-    # SKonfig T-WW
-    # SKonfig Druck
-#AF Anspassung
-#Terminal Adresse
-#Konfig System
+      name: Sensore Temperatura Esterna
 
-#Konfiguration -> Anlagenkonfiguration
-
+  # Konfiguration -> Anlagenkonfiguration
     power_dhw:
-      name: auto
-      #type: select
+      name: Potenza ACS
     power_ehs_1:
-      name: auto
+      name: Potenza EHS Livello 1
     power_ehs_2:
-      name: auto
+      name: Potenza EHS Livello 2
     power_biv:
-      name: auto
+      name: Potenza BIV
     tdiff_dhw_ch:
-      name: auto
+      name: TDiff ACS CH
     max_heating_temperature:
-      name: auto
+      name: Temperatura Massima Riscaldamento
     quiet:
-      name: auto
-#Sonderfunkt Schaltk
-#Wartezeit Sonderfunkt
+      name: Modalità Silenziosa
     t_dhw_1_min:
-      name: auto
+      name: Soglia di Commutazione TDHW
     delta_temp_ch:
-      name: auto
-    delta_temp_dhw:           # service
-      name: auto
-#VerzZeitPumpe                # service
-    flow_rate_min:            # service
-      name: auto
-    flow_rate_setpoint:       # service
-      name: auto
-    flow_rate_calc:           # service
-      name: auto
-    flow_rate_hyst:           # service
-      name: auto
+      name: Differenza Temperatura CH
+    delta_temp_dhw:
+      name: Differenza Temperatura ACS
+    flow_rate_min:
+      name: Portata Minima
+    flow_rate_setpoint:
+      name: Setpoint Portata
+    flow_rate_calc:
+      name: Portata Calcolata
+    flow_rate_hyst:
+      name: Isteresi Portata
     supply_temperature_adjustment_heating:
-      name: auto
+      name: Regolazione Temperatura Mandata Riscaldamento
     supply_temperature_adjustment_cooling:
-      name: auto
-#Min Druck
-#Max Druck
-#Soll Druck
-#Max Druckverlust
-#Relaistest
-
-# Konfiguration -> HZK Konfig
+      name: Regolazione Temperatura Mandata Raffreddamento
     hk_function:
-      name: auto
+      name: Funzione HK
     temperature_antifreeze:
-      name: auto
-#Gebäudedämumng
-#Estrich
-#Estrichprogramm
-
-# Konfiguration -> HZK Konfig -> Heizen
-
+      name: Temperatura Antigelo
     heating_limit_day:
-      name: auto
+      name: Limite Riscaldamento Giorno
     heating_limit_night:
-      name: auto
+      name: Limite Riscaldamento Notte
     heating_curve:
-      name: auto
-#Raumeinfluss
-#RF Anpassung
+      name: Curva di Riscaldamento
     flow_temperature_day:
-      name: auto
+      name: Temperatura Mandata Giorno
     flow_temperature_night:
-      name: auto
+      name: Temperatura Mandata Notte
     max_target_flow_temp:
-      name: auto
+      name: Temperatura Massima Mandata Obiettivo
     min_target_flow_temp:
-      name: auto
-#Heizk Adaption
-
-# Konfiguration -> HZK Konfig -> Kühlen
-
-#StartKühlen A-Temp
-#MaxKühlen A-Temp
-#VL-SollStartKühlen
-#VL-SollMaxKühlen
-#MinVL-SollKühlen
-#T-VLKühlen
-#T_H/K Umschaltung
-#KühlsollwertKorr
-
-#Konfiguration -> WW Konfig
-
+      name: Temperatura Minima Mandata Obiettivo
     circulation_with_dhw_program:
-      name: auto
+      name: Circolazione con Programma ACS
     circulation_interval_on:
-      name: auto
+      name: Intervallo Circolazione On
     circulation_interval_off:
-      name: auto
+      name: Intervallo Circolazione Off
     antileg_day:
-      name: auto
+      name: Giorno Anti-Legionella
     antileg_temp:
-      name: auto
+      name: Temperatura Anti-Legionella
     max_dhw_loading:
-      name: auto
+      name: Tempo Massimo di Caricamento ACS
     dhw_off_time:
-      name: auto
-
-# Others
-
+      name: Tempo di Spegnimento ACS
     electric_heater:
-      name: auto
+      name: Resistenze Elettriche - Per Pompe dopo Ottobre 2018
     thermal_power:
-      name: auto
+      name: Potenza Termica
     optimized_defrosting:
-      name: auto
-
-# To be categorized
-
+      name: Sbrinamento Ottimizzato
     bypass_valve:
-      name: auto
+      name: Valvola di Bypass
     circulation_pump:
-      name: auto
+      name: Pompa di Circolazione
     circulation_pump_min:
-      name: auto
+      name: Pompa di Circolazione Minima
     circulation_pump_max:
-      name: auto
+      name: Pompa di Circolazione Massima
     dhw_run:
-      name: auto
+      name: Esecuzione ACS
     error_code:
-      name: auto
+      name: Codice di Errore
     mode_of_operating:
-      name: auto
+      name: Stato operativo
     status_kompressor:
-      name: auto
+      name: Stato Compressore
     tdhw1:
-      name: auto
+      name: Temperatura Acqua Calda
     target_supply_temperature:
-      name: auto
+      name: Temperatura Mandata Obiettivo

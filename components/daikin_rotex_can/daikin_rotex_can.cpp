@@ -14,6 +14,12 @@ static const char* BETRIEBS_MODUS = "operating_mode";
 static const char* OPTIMIZED_DEFROSTING = "optimized_defrosting";
 static const char* TEMPERATURE_ANTIFREEZE = "temperature_antifreeze";   // T-Frostschutz
 static const char* TEMPERATURE_ANTIFREEZE_OFF = translate("off").c_str();
+static const char* STATE_DHW_PRODUCTION = translate("hot_water_production").c_str();
+static const char* STATE_HEATING = translate("heating").c_str();
+static const char* STATE_COOLING = translate("cooling").c_str();
+static const char* STATE_DEFROSTING = translate("defrosting").c_str();
+static const char* STATE_SUMMER = translate("summer").c_str();
+static const char* STATE_STANDBY = translate("standby").c_str();
 static const uint32_t POST_SETUP_TIMOUT = 15*1000;
 
 DaikinRotexCanComponent::DaikinRotexCanComponent()
@@ -115,9 +121,9 @@ void DaikinRotexCanComponent::update_thermal_power() {
             CanSensor const* tr = m_entity_manager.get_sensor("tr");
 
             float value = 0;
-            if (p_betriebs_art->state == translate("hot_water_production") && tv != nullptr && tr != nullptr) {
+            if (p_betriebs_art->state == STATE_DHW_PRODUCTION && tv != nullptr && tr != nullptr) {
                 value = (tv->state - tr->state) * (4.19 * flow_rate->state) / 3600.0f;
-            } else if ((p_betriebs_art->state == translate("heating") || p_betriebs_art->state == translate("cooling")) && tvbh != nullptr && tr != nullptr) {
+            } else if ((p_betriebs_art->state == STATE_HEATING || p_betriebs_art->state == STATE_COOLING) && tvbh != nullptr && tr != nullptr) {
                 value = (tvbh->state - tr->state) * (4.19 * flow_rate->state) / 3600.0f;
             }
             m_thermal_power_sensor->publish_state(value);
@@ -147,13 +153,13 @@ void DaikinRotexCanComponent::on_betriebsart(TEntity::TVariant const& current, T
     CanSelect* p_betriebs_modus = m_entity_manager.get_select(BETRIEBS_MODUS);
     if (m_optimized_defrosting.value() && p_betriebs_modus != nullptr) {
         if (std::holds_alternative<std::string>(current)) {
-            if (std::get<std::string>(current) == translate("defrosting") && p_betriebs_modus->state != translate("summer")) {
+            if (std::get<std::string>(current) == STATE_DEFROSTING && p_betriebs_modus->state != STATE_SUMMER) {
                 m_entity_manager.sendSet(p_betriebs_modus->get_name(), 0x05); // Sommer
-            } else if (std::get<std::string>(current) == translate("heating") && p_betriebs_modus->state != translate("heating")) {
+            } else if (std::get<std::string>(current) == STATE_HEATING && p_betriebs_modus->state != STATE_HEATING) {
                 m_entity_manager.sendSet(p_betriebs_modus->get_name(), 0x03); // Heizen
-            } else if (std::get<std::string>(current) == translate("standby") && p_betriebs_modus->state != translate("heating")) {
+            } else if (std::get<std::string>(current) == STATE_STANDBY && p_betriebs_modus->state != STATE_HEATING) {
                 m_entity_manager.sendSet(p_betriebs_modus->get_name(), 0x03); // Heizen
-            } else if (std::get<std::string>(current) == translate("hot_water_production") && std::get<std::string>(previous) == translate("defrosting") && p_betriebs_modus->state != translate("heating")) {
+            } else if (std::get<std::string>(current) == STATE_DHW_PRODUCTION && std::get<std::string>(previous) == STATE_DEFROSTING && p_betriebs_modus->state != STATE_HEATING) {
                 m_entity_manager.sendSet(p_betriebs_modus->get_name(), 0x03); // Heizen
             }
         } else {

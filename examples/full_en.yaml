@@ -1,0 +1,324 @@
+esphome:
+    name: hpsu-can
+    friendly_name: HPSU.CAN
+    platformio_options:
+        build_unflags:
+            - "-std=gnu++11"
+            - "-fno-rtti"
+        build_flags:
+            - "-std=gnu++17"
+
+esp32:
+  board: esp32-s3-devkitc-1
+  framework:
+    type: arduino
+
+external_components:
+  - source: github://Trunks1982/Daikin-Rotex-HPSU-CAN
+
+#
+#external_components:   # Use this block instead of the one above if you want to use the development branch
+#  - source:
+#      type: git
+#      url: https://github.com/Trunks1982/Daikin-Rotex-HPSU-CAN.git
+#      ref: dev
+#    refresh: 0s
+
+logger:
+  level: INFO
+
+api:
+  encryption:
+    key: !secret api_encryption_key
+
+ota:
+  platform: esphome
+  password: !secret ota_password
+
+web_server:
+  version: 3
+
+wifi:
+  ssid: !secret wifi_ssid
+  password: !secret wifi_password
+  power_save_mode: none
+
+  ap:
+    ssid: DaikinRotex Fallback Hotspot
+    password: H3jGqANSa7aL
+
+captive_portal:
+
+time:
+  - platform: homeassistant
+
+debug:
+  update_interval: 5s
+
+sensor:
+  - platform: uptime
+    type: seconds
+    name: Uptime Seconds
+  - platform: uptime
+    type: timestamp
+    name: Uptime Timestamp
+  - platform: debug
+    free:
+      name: "Heap Free"
+    block:
+      name: "Heap Max Block"
+  - platform: wifi_signal
+    name: "WiFi Signal Sensor"
+    update_interval: 60s
+
+button:
+  - platform: restart
+    name: "Rotex ESP Restart"
+#switch:
+#  - platform: gpio
+#    name: Smart Grid
+#    pin:
+#      number: GPIO06
+#      inverted: true
+
+#  - platform: gpio
+#    name: EVU
+#    pin:
+#      number: GPIO05
+#      inverted: true
+
+text_sensor:
+  - platform: debug
+    device:
+      name: "Device Info"
+    reset_reason:
+      name: "Reset Reason"
+  - platform: wifi_info
+    ip_address:
+      name: ESP IP Address
+    ssid:
+      name: ESP Connected SSID
+
+canbus:
+  - platform: esp32_can
+    id: can_bus
+    can_id: 0x680
+    tx_pin: GPIO5
+    rx_pin: GPIO6
+    bit_rate: 20kbps
+
+daikin_rotex_can:
+  id: rotext_hpsu
+  language: en
+  canbus_id: can_bus
+  update_interval: 30
+  #max_spread_tvbh_tv: 4
+  #max_spread_tvbh_tr: 4
+  log_filter:
+    name: Log Filter
+  custom_request:
+    name: Custom Request
+  dump:
+    name: Dump Senors
+  project_git_hash:
+    name: Project Git Hash
+  entities:
+
+    # Info
+
+    # mode
+    ext:
+      name: Ext
+    # RT
+    # Pump
+    # EHS
+    # BPV
+    tv:
+      name: Flow Temperature (TV)
+      update_interval: 5
+    tvbh:
+      name: Flow Temperature Heating (TVBH)
+      update_interval: 5
+    tr:
+      name: Return Temperature Heating
+      update_interval: 5
+    # Tdhw
+    temperature_outside:
+      name: Outside Temperature
+    # V
+    # TVBH2
+    # TR2
+    # Tdhw2
+    tliq:
+      name: Liquid Line Temperature
+    ta2:
+      name: TA2
+    # quiet
+
+  # Overview
+    water_pressure:
+      name: Water Pressure
+    t_hs:
+      name: T-WE
+    t_ext:
+      name: T-Outside
+    flow_rate:
+      name: Flow Rate
+      update_interval: 10
+    status_kesselpumpe:
+      name: Boiler Pump Status
+    runtime_compressor:
+      name: Compressor Runtime
+    runtime_pump:
+      name: Pump Runtime
+    dhw_mixer_position:
+      name: DHW Mixer Position
+    qboh:
+      name: EHS for DHW
+    ehs_for_ch:
+      name: EHS for CH
+    energy_cooling:
+      name: Cooling Energy
+    qch:
+      name: Heating Energy
+    total_energy_produced:
+      name: Total Energy Produced
+    qdhw:
+      name: Energy for DHW
+    total_electrical_energy:
+      name: Total Electrical Energy
+
+  # ESP custom sensors
+    energy_saving_mode:
+      name: ES Mode
+
+  # Betriebsart
+    operating_mode:
+      name: Operating Mode
+      update_interval: 5
+
+  # Room Set Day
+    target_room1_temperature:
+      name: Target Room 1 Temperature
+      type: select
+
+  # Room Set Night
+    target_hot_water_temperature:
+      name: Target Hot Water Temperature
+      type: select
+
+  # WW Install
+    1_dhw:
+      name: 1 x Domestic Hot Water
+    hp_hyst_tdhw:
+      name: HP Hyst TDHW
+    delay_time_for_backup_heating:
+      name: Waiting Time for Backup Heating
+
+  # Configuration
+    outdoor_unit:
+      name: Outdoor Unit
+    indoor_unit:
+      name: Indoor Unit
+    function_ehs:
+      name: Function EHS
+    ch_support:
+      name: CH Support
+    smart_grid:
+      name: Smart Grid
+    sg_mode:
+      name: SG Mode
+    external_temp_sensor:
+      name: Config External Temperature
+
+  # Configuration -> System Configuration
+    power_dhw:
+      name: Power DHW
+    power_ehs_1:
+      name: Power EHS Level 1
+    power_ehs_2:
+      name: Power EHS Level 2
+    power_biv:
+      name: Power BIV
+    tdiff_dhw_ch:
+      name: TDiff DHW CH
+    max_heating_temperature:
+      name: Max Heating Temperature
+    quiet:
+      name: Silent Mode
+    t_dhw_1_min:
+      name: Switch Threshold TDHW
+    delta_temp_ch:
+      name: CH Spread
+    delta_temp_dhw:
+      name: DHW Spread
+    flow_rate_min:
+      name: Flow Rate Min
+    flow_rate_setpoint:
+      name: Flow Rate Setpoint
+    flow_rate_calc:
+      name: Flow Rate Calculated
+    flow_rate_hyst:
+      name: Flow Rate Hysteresis
+    supply_temperature_adjustment_heating:
+      name: Supply Temperature Adjustment Heating
+    supply_temperature_adjustment_cooling:
+      name: Supply Temperature Adjustment Cooling
+    hk_function:
+      name: HK Function
+    temperature_antifreeze:
+      name: Anti-Freeze Temperature
+    heating_limit_day:
+      name: Heating Limit Day
+    heating_limit_night:
+      name: Heating Limit Night
+    heating_curve:
+      name: Heating Curve
+    flow_temperature_day:
+      name: Flow Temperature Day
+    flow_temperature_night:
+      name: Flow Temperature Night
+    max_target_flow_temp:
+      name: Max Target Flow Temperature
+    min_target_flow_temp:
+      name: Min Target Flow Temperature
+    circulation_with_dhw_program:
+      name: Circulation with DHW Program
+    circulation_interval_on:
+      name: Circulation Interval On
+    circulation_interval_off:
+      name: Circulation Interval Off
+    antileg_day:
+      name: Anti-Legionella Day
+    antileg_temp:
+      name: Anti-Legionella Temperature
+    max_dhw_loading:
+      name: Max DHW Loading Time
+    dhw_off_time:
+      name: DHW Off Time
+    electric_heater:
+      name: Electric Heater - For Pumps After October 2018
+    thermal_power:
+      name: Thermal Power
+    optimized_defrosting:
+      name: Optimized Defrosting
+    bypass_valve:
+      name: Bypass Valve
+    circulation_pump:
+      name: Circulation Pump
+    circulation_pump_min:
+      name: Circulation Pump Min
+    circulation_pump_max:
+      name: Circulation Pump Max
+    dhw_run:
+      name: DHW Run
+    error_code:
+      name: Error Code
+    mode_of_operating:
+      name: Mode of Operating
+    status_kompressor:
+      name: Compressor Status
+    tdhw1:
+      name: Hot Water Temperature
+    target_supply_temperature:
+      name: Target Supply Temperature

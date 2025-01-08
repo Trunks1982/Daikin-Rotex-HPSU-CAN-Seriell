@@ -1,0 +1,403 @@
+esphome:
+    name: hpsu-can
+    friendly_name: HPSU.CAN
+    platformio_options:
+        build_unflags:
+            - "-std=gnu++11"
+            - "-fno-rtti"
+        build_flags:
+            - "-std=gnu++17"
+
+esp32:
+  board: esp32-s3-devkitc-1
+  framework:
+    type: arduino
+
+external_components:
+  - source: github://Trunks1982/Daikin-Rotex-HPSU-CAN
+
+#
+#external_components:   # Use this block instead of the one above if you want to use the development branch
+#  - source:
+#      type: git
+#      url: https://github.com/Trunks1982/Daikin-Rotex-HPSU-CAN.git
+#      ref: dev
+#    refresh: 0s
+
+logger:
+  level: INFO
+
+api:
+  encryption:
+    key: !secret api_encryption_key
+
+ota:
+  platform: esphome
+  password: !secret ota_password
+
+web_server:
+  version: 3
+
+wifi:
+  ssid: !secret wifi_ssid
+  password: !secret wifi_password
+  power_save_mode: none
+
+  ap:
+    ssid: DaikinRotex Fallback Hotspot
+    password: H3jGqANSa7aL
+
+captive_portal:
+
+time:
+  - platform: homeassistant
+
+debug:
+  update_interval: 5s
+
+sensor:
+  - platform: uptime
+    type: seconds
+    name: Uptime Seconds
+  - platform: uptime
+    type: timestamp
+    name: Uptime Timestamp
+  - platform: debug
+    free:
+      name: "Heap Free"
+    block:
+      name: "Heap Max Block"
+  - platform: wifi_signal
+    name: "WiFi Signal Sensor"
+    update_interval: 60s
+
+button:
+  - platform: restart
+    name: "Rotex ESP Restart"
+#switch:
+#  - platform: gpio
+#    name: Smart Grid
+#    pin:
+#      number: GPIO06
+#      inverted: true
+
+#  - platform: gpio
+#    name: EVU
+#    pin:
+#      number: GPIO05
+#      inverted: true
+
+text_sensor:
+  - platform: debug
+    device:
+      name: "Device Info"
+    reset_reason:
+      name: "Reset Reason"
+  - platform: wifi_info
+    ip_address:
+      name: ESP IP Address
+    ssid:
+      name: ESP Connected SSID
+
+canbus:
+  - platform: esp32_can
+    id: can_bus
+    can_id: 0x680
+    tx_pin: GPIO5
+    rx_pin: GPIO6
+    bit_rate: 20kbps
+
+daikin_rotex_can:
+  id: rotext_hpsu
+  language: de
+  canbus_id: can_bus
+  update_interval: 30
+  #max_spread_tvbh_tv: 4
+  #max_spread_tvbh_tr: 4
+  log_filter:
+    name: Log Filter
+  custom_request:
+    name: Custom Request
+  dump:
+    name: Dump Senors
+  project_git_hash:
+    name: Project Git Hash
+  entities:
+
+# Info
+
+#mode
+    ext:
+      name: Ext
+#RT
+#Pump
+#EHS
+#BPV
+    tv:
+      name: Heizkreis Vorlauf (TV)
+      update_interval: 5
+    tvbh:
+      name: Vorlauftemperatur Heizung (TVBH)
+      update_interval: 5
+    tr:
+      name: Ruecklauftemperatur Heizung
+      update_interval: 5
+#Tdhw
+    temperature_outside:  # ta
+      name: Aussentemperatur
+#V
+#TVBH2
+#TR2
+#Tdhw2
+    tliq:
+      name: Tliq
+    ta2:
+      name: TA2
+#quiet
+
+#Übersicht
+    water_pressure:
+      name: Wasserdruck
+    t_hs:
+      name: T-WE
+#T-WE Soll
+    t_ext:  # Oder gehört hier temperature_outside rein?
+      name: T-Aussen
+#T-WW
+#T-WW Soll
+#T-Rücklauf
+    flow_rate:
+      name: Durchfluss
+      update_interval: 10
+#T-HK
+#T-HK Soll
+    status_kesselpumpe:
+      name: Status Kesselpumpe
+    runtime_compressor:
+      name: Laufzeit Compressor
+    runtime_pump:
+      name: Laufzeit Pump
+    dhw_mixer_position:
+      name: DHW Mischer Position
+    qboh:
+      name: EHS für DHW
+    ehs_for_ch:
+      name: EHS fuer CH
+    energy_cooling:
+      name: Energie Kühlung
+    qch:
+      name: Energie Heizung
+    total_energy_produced:
+      name: Erzeugte Energie Gesamt
+    qdhw:
+      name: Energie für WW
+    total_electrical_energy:
+      name: Elektrische Energie Gesamt
+#WE Typ
+#SwNr B1/U1
+#SwNr Regler
+#SwNr RTXRT
+
+# ESP custom sensors
+    energy_saving_mode:
+      name: ES mode
+
+# Betriebsart
+    operating_mode:
+      name: Betriebsmodus
+      update_interval: 5
+
+# Raum Soll Tag
+    target_room1_temperature:
+      name: Raumsoll 1
+      type: select
+  # T-RaumSoll 2
+  # T-RaumSoll 3
+
+# Raum Soll Nacht
+  # T-Absenkung
+  # T-Abwesend
+
+# WW Solltemp
+    target_hot_water_temperature:
+      name: T-WW-Soll1
+      type: select
+
+  # T-WWSoll 2
+  # T-WWSoll 3
+
+# WW Install
+    1_dhw:
+      name: 1 x Warmwasser
+    hp_hyst_tdhw:
+      name: WPHyst TDHW
+    delay_time_for_backup_heating:
+      name: Wartezeit BOH
+
+#Konfiguration
+
+#Konfiguration -> Installation
+#...
+    outdoor_unit:
+      name: Aussengerät
+    indoor_unit:
+      name: Innengerät
+    function_ehs:
+      name: Funktion EHS
+    ch_support:
+      name: HZ Unterstützung
+#Bivalenzfunktion
+    smart_grid:
+      name: Smart Grid
+    sg_mode:
+      name: SG Modus
+#HT/NT Funktion
+#HT/NT Anschluss
+#Raumthermostat
+#Interlinkfunktion
+#Konfig MFR 1
+#Entlüftungsfunktion
+#PWM Konfig
+#...
+#Sensor Konfig
+    external_temp_sensor:
+      name: SKonfig T-Außen
+    # SKonfig T-WW
+    # SKonfig Druck
+#AF Anspassung
+#Terminal Adresse
+#Konfig System
+
+#Konfiguration -> Anlagenkonfiguration
+
+    power_dhw:
+      name: Leistung WW
+      #type: select
+    power_ehs_1:
+      name: Leistung EHS Stufe 1
+    power_ehs_2:
+      name: Leistung EHS Stufe 2
+    power_biv:
+      name: Leistung BIV
+    tdiff_dhw_ch:
+      name: TDiff-WW HZU
+    max_heating_temperature:
+      name: Max Temp Heizung
+    quiet:
+      name: Flüsterbetrieb
+#Sonderfunkt Schaltk
+#Wartezeit Sonderfunkt
+    t_dhw_1_min:
+      name: Schaltschwelle TDHW
+    delta_temp_ch:
+      name: Spreizung HZ
+    delta_temp_dhw:           # service
+      name: Spreizung WW
+#VerzZeitPumpe                # service
+    flow_rate_min:            # service
+      name: Durchfluss Min
+    flow_rate_setpoint:       # service
+      name: Durchfluss Soll
+    flow_rate_calc:           # service
+      name: DurchflussBer
+    flow_rate_hyst:           # service
+      name: Durchfluss Hyst
+    supply_temperature_adjustment_heating:
+      name: Anpassung T-VL Heizen
+    supply_temperature_adjustment_cooling:
+      name: Anpassung T-VL Kühlen
+#Min Druck
+#Max Druck
+#Soll Druck
+#Max Druckverlust
+#Relaistest
+
+# Konfiguration -> HZK Konfig
+    hk_function:
+      name: HK Funktion
+    temperature_antifreeze:
+      name: T-Frostschutz
+#Gebäudedämumng
+#Estrich
+#Estrichprogramm
+
+# Konfiguration -> HZK Konfig -> Heizen
+
+    heating_limit_day:
+      name: Heizgrenze Tag
+    heating_limit_night:
+      name: Heizgrenze Nacht
+    heating_curve:
+      name: Heizkurve
+#Raumeinfluss
+#RF Anpassung
+    flow_temperature_day:
+      name: T Vorlauf Tag
+    flow_temperature_night:
+      name: T Vorlauf Nacht
+    max_target_flow_temp:
+      name: Max T-Vorlauf
+    min_target_flow_temp:
+      name: Min T-Vorlauf
+#Heizk Adaption
+
+# Konfiguration -> HZK Konfig -> Kühlen
+
+#StartKühlen A-Temp
+#MaxKühlen A-Temp
+#VL-SollStartKühlen
+#VL-SollMaxKühlen
+#MinVL-SollKühlen
+#T-VLKühlen
+#T_H/K Umschaltung
+#KühlsollwertKorr
+
+#Konfiguration -> WW Konfig
+
+    circulation_with_dhw_program:
+      name: Zirk mit WW-Prog
+    circulation_interval_on:
+        name: ZirkInterval An
+    circulation_interval_off:
+        name: ZirkInterval Aus
+    antileg_day:
+        name: AntilegTag
+#AntilegZeit
+    antileg_temp:
+        name: AntilegTemp
+    max_dhw_loading:
+      name: Max WW Ladezeit
+    dhw_off_time:
+      name: WW Sperrzeit
+
+# Others
+
+    electric_heater:
+      name: Heizstäbe - Für Pumpen nach Oktober 2018
+    thermal_power:
+      name: Thermische Leistung
+    optimized_defrosting:
+      name: Abtau-Optimierung
+
+# To be categorized
+
+    bypass_valve:
+      name: BPV
+    circulation_pump:
+      name: Umwaelzpumpe
+    circulation_pump_min:
+      name: Umwälzpumpe Min
+    circulation_pump_max:
+      name: Umwälzpumpe Max
+    dhw_run:
+      name: Warmwasser bereiten
+    error_code:
+      name: Fehlercode
+    mode_of_operating:
+      name: Betriebsart
+    status_kompressor:
+      name: Status Kompressor
+    tdhw1:
+      name: Warmwassertemperatur
+    target_supply_temperature:
+      name: Vorlauf Soll
