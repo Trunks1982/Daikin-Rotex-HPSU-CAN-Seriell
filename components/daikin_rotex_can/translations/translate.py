@@ -77,7 +77,7 @@ def translate(key: str) -> str:
 
     if key in lang_translations:
         translated = lang_translations[key]
-        _LOGGER.info("[Translate] Key '%s' found in language '%s' -> '%s'",key, current_language, translated)
+        _LOGGER.debug("[Translate] Key '%s' found in language '%s' -> '%s'",key, current_language, translated)
         return translated
 
     if "en" in translations and key in translations["en"]:
