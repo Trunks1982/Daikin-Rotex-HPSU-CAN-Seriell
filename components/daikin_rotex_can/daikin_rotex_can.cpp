@@ -21,6 +21,7 @@ static const char* STATE_COOLING = translate("cooling").c_str();
 static const char* STATE_DEFROSTING = translate("defrosting").c_str();
 static const char* STATE_SUMMER = translate("summer").c_str();
 static const char* STATE_STANDBY = translate("standby").c_str();
+static const char* DEFECT = translate("defect").c_str();
 static const uint32_t POST_SETUP_TIMOUT = 15*1000;
 
 DaikinRotexCanComponent::DaikinRotexCanComponent()
@@ -343,14 +344,14 @@ std::string DaikinRotexCanComponent::recalculate_state(EntityBase* pEntity, std:
             if (tvbh->state > (tv->state + m_max_spread.tvbh_tv) && dhw_mixer_position->state == 0.0f && flow_rate->state > 600.0f) {
                 ESP_LOGE(TAG, "3UV DHW defekt => tvbh: %f, tv: %f, max_spread: %f, bpv: %f, flow_rate: %f",
                     tvbh->state, tv->state, m_max_spread.tvbh_tv, dhw_mixer_position->state, flow_rate->state);
-                return new_state + "|3UV DHW " + translate("defect");
+                return new_state + "|3UV DHW " + DEFECT;
             }
         }
         if (tvbh != nullptr && tr != nullptr && bpv != nullptr && flow_rate != nullptr) {
             if (tvbh->state > (tr->state + m_max_spread.tvbh_tr) && bpv->state == 100.0f && millis() > (bpv->getLastValueChange() + delay) && flow_rate->state > 600.0f) {
                 ESP_LOGE(TAG, "3UV BPV defekt => tvbh: %f, tr: %f, max_spread: %f, dhw_mixer_pos: %f, flow_rate: %f",
                     tvbh->state, tr->state, m_max_spread.tvbh_tr, bpv->state, flow_rate->state);
-                return new_state + "|3UV BPV "+ translate("defect");
+                return new_state + "|3UV BPV " + DEFECT;
             }
         }
     }

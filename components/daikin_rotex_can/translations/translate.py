@@ -103,38 +103,35 @@ def apply_translation_to_mapping(mapping: dict) -> dict:
 
 # Generate translation.cpp, creating translation dictionary from python one
 def generate_cpp_translations_for_language(translations, selected_language, keys_to_include=None):
-    cpp_code = '#include "translations.h"\n'
-    cpp_code += '#include <string>\n\n'
+    cpp_code = '#include "esphome/components/daikin_rotex_can/translations.h"\n'
     cpp_code += '#include "esphome/core/log.h"\n\n'
+    cpp_code += '#include <string>\n'
+    cpp_code += '#include <map>\n\n'
     cpp_code += 'namespace esphome {\nnamespace daikin_rotex_can {\n\n'
 
-    # check that selected language exists in dictionary
+    # Check selected language
     if selected_language not in translations:
         raise ValueError(f"Selected language '{selected_language}' not found in translations dictionary.")
 
     _LOGGER.info(f"Building cpp translate dictionary for language: {selected_language}")
 
-    # Reduces to only necessary records
     selected_translations = translations[selected_language]
     if keys_to_include:
         selected_translations = {key: value for key, value in selected_translations.items() if key in keys_to_include}
 
-    # Cpp reduced dictionary
-    cpp_code += f'static const Translation translations[] = {{\n'
-    translation_entries = []
-    for key, value in translations[selected_language].items():
-        translation_entries.append(f'    {{"{key}", "{value}"}}')
-    cpp_code += ',\n'.join(translation_entries)
-    cpp_code += '\n};\n\n'
+    # Generate map
+    cpp_code += 'static const std::map<std::string, std::string> translations = {\n'
+    for key, value in selected_translations.items():
+        cpp_code += f'    {{"{key}", "{value}"}},\n'
+    cpp_code += '};\n\n'
 
-    # Cpp translation function
+    # Translation function
     cpp_code += (
         'std::string translate(const std::string &key) {\n'
-        '    for (const auto &entry : translations) {\n'
-        '        if (key == entry.key) {\n'
-        '            ESP_LOGD("translate", "Key \'%s\' translated -> \'%s\'", key.c_str(), entry.value);\n'
-        '            return entry.value;\n'
-        '        }\n'
+        '    auto it = translations.find(key);\n'
+        '    if (it != translations.end()) {\n'
+        '        ESP_LOGD("translate", "Key \'%s\' translated -> \'%s\'", key.c_str(), it->second.c_str());\n'
+        '        return it->second;\n'
         '    }\n'
         '    ESP_LOGW("TRANSLATE", "Key \'%s\' not found", key.c_str());\n'
         '    return "ERROR: Key \'" + key + "\' not found";\n'
@@ -151,6 +148,6 @@ def write_cpp_file(output_dir):
     _LOGGER.info("Writing cpp translate file")
     cpp_code = generate_cpp_translations_for_language(translations, current_language)
     output_path = os.path.join(output_dir, "translations.cpp")
-    with open(output_path, "w") as f:
+    with open(output_path, "w", encoding="utf-8") as f:
         f.write(cpp_code)
     _LOGGER.info(f"Generated {output_path}")  
