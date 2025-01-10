@@ -1465,7 +1465,7 @@ CONFIG_SCHEMA = cv.Schema(
         cv.Optional(CONF_UPDATE_INTERVAL, default=DEFAULT_UPDATE_INTERVAL): cv.uint16_t,
         cv.Optional(CONF_MAX_SPREAD_TVBH_TV, default=DEFAULT_MAX_SPREAD_TVBH_TV): cv.float_,
         cv.Optional(CONF_MAX_SPREAD_TVBH_TR, default=DEFAULT_MAX_SPREAD_TVBH_TR): cv.float_,
-        cv.Optional(CONF_LANGUAGE, default="de"): cv.enum(SUPPORTED_LANGUAGES, lower=True, space="_"),
+        cv.Required(CONF_LANGUAGE): cv.enum(SUPPORTED_LANGUAGES, lower=True, space="_"),
 
         ########## Texts ##########
 
