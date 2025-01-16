@@ -201,6 +201,13 @@ void DaikinRotexCanComponent::on_betriebsart(TEntity::TVariant const& current, T
             ESP_LOGE(TAG, "on_betriebsart(): current has no valid string value!");
         }
     }
+
+    ESP_LOGE(TAG, "on_betriebsart(): current: %s, previous: %s", std::get<std::string>(current).c_str(), std::get<std::string>(previous).c_str());
+
+    if (current != previous) {
+        m_low_temperature_spread_timestamp = 0;
+        ESP_LOGE(TAG, "on_betriebsart(): m_low_temperature_spread_timestamp reset to 0");
+    }
 }
 
 ///////////////// Texts /////////////////
@@ -402,17 +409,18 @@ std::string DaikinRotexCanComponent::recalculate_state(EntityBase* pEntity, std:
         }
         if (p_betriebs_art != nullptr) {
             if (Utils::is_in(p_betriebs_art->state, STATE_DHW_PRODUCTION, STATE_HEATING)) {
+                ESP_LOGE(TAG, "recalculate_state(): spread: %f, millis: %d, ts: %d", get_temperature_spread(), millis(), m_low_temperature_spread_timestamp);
                 if (get_temperature_spread() < 2.0f) {
-                    if (millis() > (m_low_temperature_spread_timestamp + 5*60*1000)) { // The flow temperature (Vorlauf) may sometimes drop suddenly, even before the mode_of_operating is reported.
-                        return new_state + "|" + LOW_TEMPERATURE_SPREAD;
+                    if (m_low_temperature_spread_timestamp > 0) {
+                        if (millis() > (m_low_temperature_spread_timestamp + 5*60*1000)) { // The flow temperature (Vorlauf) may sometimes drop suddenly, even before the mode_of_operating is reported.
+                            return new_state + "|" + LOW_TEMPERATURE_SPREAD;
+                        }
                     } else if (m_low_temperature_spread_timestamp == 0) {
                         m_low_temperature_spread_timestamp = millis();
                     }
                 } else {
                     m_low_temperature_spread_timestamp = 0u;
                 }
-            } else {
-                m_low_temperature_spread_timestamp = 0u;
             }
         }
     }
