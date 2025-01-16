@@ -21,6 +21,12 @@ public:
         return std::string(buffer.get(), buffer.get() + size - 1);
     }
 
+    template<typename First, typename ... T>
+    static bool is_in(First &&first, T && ... t)
+    {
+        return ((first == t) || ...);
+    }
+
     static std::string to_hex(TMessage const& data);
     static bool find(std::string const& haystack, std::string const& needle);
     static std::vector<std::string> split(std::string const& str);

@@ -77,10 +77,10 @@ private:
     bool on_custom_select(std::string const& id, uint8_t value);
     void on_betriebsart(TEntity::TVariant const& current, TEntity::TVariant const& previous);
 
-    float getSensorState(std::string const& name);
+    float get_temperature_spread() const;
     void throwPeriodicError(std::string const& message);
     bool is_command_set(TMessage const&);
-    std::string recalculate_state(EntityBase* pEntity, std::string const& new_state) const;
+    std::string recalculate_state(EntityBase* pEntity, std::string const& new_state);
 
     esphome::daikin_rotex_can::TEntityManager m_entity_manager;
     std::shared_ptr<esphome::canbus::CanbusTrigger> m_canbus_trigger;
@@ -100,6 +100,7 @@ private:
     MaxSpread m_max_spread;
     float m_thermal_power_raw;
     PID m_pid;
+    uint32_t m_low_temperature_spread_timestamp;
 };
 
 inline void DaikinRotexCanComponent::set_canbus(esphome::esp32_can::ESP32Can* pCanbus) {

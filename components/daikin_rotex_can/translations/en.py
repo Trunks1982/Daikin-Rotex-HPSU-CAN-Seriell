@@ -96,5 +96,6 @@ translations_en = {
     "sgn_normal_mode": "SGN - Normal Mode",
     "sg1_hot_water_and_heating_off": "SG1 - Hot Water and Heating Off",
     "sg2_hot_water_and_heating_plus_5c": "SG2 - Hot Water and Heating +5°C",
-    "sg3_hot_water_70c": "SG3 - Hot Water 70°C"
+    "sg3_hot_water_70c": "SG3 - Hot Water 70°C",
+    "low_temperature_spread": "Low temperature spread"
 }

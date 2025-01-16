@@ -115,6 +115,10 @@ public:
         return m_last_value_change_timestamp;
     }
 
+    bool isChangedInLastMilliseconds(uint32_t milliseconds) const {
+        return millis() > (getLastValueChange() + milliseconds);
+    }
+
     void set_canbus(esphome::esp32_can::ESP32Can* pCanbus) {
         m_pCanbus = pCanbus;
     }
