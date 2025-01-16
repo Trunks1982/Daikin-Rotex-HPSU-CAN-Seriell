@@ -423,7 +423,7 @@ std::string DaikinRotexCanComponent::recalculate_state(EntityBase* pEntity, std:
                 ESP_LOGE(TAG, "recalculate_state(): spread: %f, millis: %d, ts: %d", get_temperature_spread(), millis(), m_low_temperature_spread_timestamp);
                 if (get_temperature_spread() < 2.0f) {
                     if (m_low_temperature_spread_timestamp > 0) {
-                        if (millis() > (m_low_temperature_spread_timestamp + 5*60*1000)) { // The flow temperature (Vorlauf) may sometimes drop suddenly, even before the mode_of_operating is reported.
+                        if (millis() > (m_low_temperature_spread_timestamp + 20*60*1000)) { // The flow temperature (Vorlauf) may sometimes drop suddenly, even before the mode_of_operating is reported.
                             return new_state + "|" + LOW_TEMPERATURE_SPREAD;
                         }
                     } else if (m_low_temperature_spread_timestamp == 0) {
