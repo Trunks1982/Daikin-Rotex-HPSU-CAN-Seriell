@@ -326,7 +326,7 @@ void DaikinRotexCanComponent::loop() {
 
                 const float pid_output = m_pid.compute(m_thermal_power_raw, smoothed_tp, dt);
 
-                ESP_LOGW(TAG, "loop raw: %f, smooth: %d, dt: %f, out: %f", m_thermal_power_raw, smoothed_tp, dt, pid_output);
+                ESP_LOGW(TAG, "loop raw: %f, smooth: %f, dt: %f, out: %f", m_thermal_power_raw, smoothed_tp, dt, pid_output);
 
                 smoothed_tp += pid_output;
 
