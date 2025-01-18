@@ -8,6 +8,15 @@ static const char* TAG = "daikin_rotex_can";
 
 /////////////////////// CanSensor ///////////////////////
 
+CanSensor::CanSensor()
+: m_state(std::numeric_limits<float>::quiet_NaN())
+, m_range()
+, m_pid(0.2, 0.05f, 0.05f, 0.2, 0.2, 0.1f)
+, m_smooth(false)
+, m_smooth_state(std::numeric_limits<float>::quiet_NaN())
+{
+}
+
 bool CanSensor::handleValue(uint16_t value, TEntity::TVariant& current, TVariant& previous) {
     previous = state;
     if (m_config.isSigned) {
@@ -26,6 +35,29 @@ bool CanSensor::handleValue(uint16_t value, TEntity::TVariant& current, TVariant
     }
 
     return valid;
+}
+
+void CanSensor::update(uint32_t millis) {
+    TEntity::update(millis);
+    if (m_smooth) {
+        const float dt = (::millis() - m_pid.get_last_update()) / 1000.0f; // seconds
+        if (dt > 10.0f) {
+            if (std::isnan(m_smooth_state)) {
+                m_smooth_state = m_state;
+            }
+            m_smooth_state += m_pid.compute(m_state, m_smooth_state, dt);
+            m_smooth_state = std::ceil(m_smooth_state * 100.0) / 100.0;
+
+            publish_state(m_smooth_state);
+        }
+    }
+}
+
+void CanSensor::publish(float state) {
+    m_state = state;
+    if (!m_smooth) {
+        publish_state(state);
+    }
 }
 
 /////////////////////// CanTextSensor ///////////////////////

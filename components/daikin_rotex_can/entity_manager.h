@@ -34,6 +34,7 @@ public:
     CanBinarySensor const* get_binary_sensor(std::string const& id) const;
 
     CanSelect* get_select(std::string const& id);
+    CanSelect const* get_select(std::string const& id) const;
 
     bool sendNextPendingGet();
     void sendSet(std::string const& request_name, float value);

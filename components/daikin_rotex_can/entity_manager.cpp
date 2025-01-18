@@ -119,6 +119,18 @@ CanSelect* TEntityManager::get_select(std::string const& id) {
     return nullptr;
 }
 
+CanSelect const* TEntityManager::get_select(std::string const& id) const {
+    EntityBase const* pEntity = get_entity_base(id);
+    if (CanSelect const* pSelect = dynamic_cast<CanSelect const*>(pEntity)) {
+        return pSelect;
+    } else if (pEntity) {
+        ESP_LOGE(TAG, "Entity is not a select: %s", pEntity->get_name().c_str());
+    } else {
+        ESP_LOGE(TAG, "const get_select() => Entity is null!");
+    }
+    return nullptr;
+}
+
 bool TEntityManager::sendNextPendingGet() {
     TEntity* pEntity = getNextRequestToSend();
     if (pEntity != nullptr) {
@@ -169,12 +181,15 @@ TEntity* TEntityManager::getNextRequestToSend() {
         }
     }
 
+    TEntity* pNext = nullptr;
     for (auto pEntity : m_entities) {
         if (pEntity->is_command_set() && pEntity->isGetNeeded()) {
-            return pEntity;
+            if (pNext == nullptr || pEntity->getLastUpdate() < pNext->getLastUpdate()) {
+                pNext = pEntity;
+            }
         }
     }
-    return nullptr;
+    return pNext;
 }
 
 

@@ -42,11 +42,12 @@ public:
         // Gesamtausgang
         float output = p_term + i_term + d_term;
         m_previous_error = error;
+
+        m_last_update = millis();
         return output;
     }
 
     uint32_t get_last_update() const { return m_last_update; }
-    void set_last_update(uint32_t last_update) { m_last_update = last_update; }
 
 private:
     float m_p;

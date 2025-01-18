@@ -21,6 +21,7 @@ static const std::string STATE_DEFROSTING = translate("defrosting");
 static const std::string STATE_SUMMER = translate("summer");
 static const std::string STATE_STANDBY = translate("standby");
 static const std::string DEFECT = translate("defect");
+static const std::string LOW_TEMPERATURE_SPREAD = translate("low_temperature_spread");
 static const uint32_t POST_SETUP_TIMOUT = 15*1000;
 
 DaikinRotexCanComponent::DaikinRotexCanComponent()
@@ -30,12 +31,13 @@ DaikinRotexCanComponent::DaikinRotexCanComponent()
 , m_optimized_defrosting(false)
 , m_project_git_hash_sensor(nullptr)
 , m_project_git_hash()
-, m_thermal_power_sensor(nullptr)
-, m_thermal_power_sensor_raw(nullptr)
-, m_temperature_spread_sensor(nullptr)
-, m_thermal_power_raw(std::numeric_limits<float>::quiet_NaN())
-, m_pid(0.2, 0.05f, 0.05f, 0.2, 0.2, 0.1f)
+, m_thermal_power_sensor(new CanSensor()) // Create dummy sensors to avoid nullptr without HA api communicaction. Can be overwritten by the user.
+, m_thermal_power_raw_sensor(new CanSensor())
+, m_temperature_spread_sensor(new CanSensor()) // Used to detect valve malfunctions, even if the sensor has not been defined by the user.
+, m_temperature_spread_raw_sensor(new CanSensor())
+, m_low_temperature_spread_timestamp(0u)
 {
+    m_temperature_spread_sensor->set_smooth(true);
 }
 
 void DaikinRotexCanComponent::setup() {
@@ -137,31 +139,22 @@ void DaikinRotexCanComponent::update_thermal_power() {
         return;
     }
 
-    m_thermal_power_raw = (tv->state - tr->state) * (4.19 * flow_rate->state) / 3600.0f;
+    const float thermal_power_raw = (tv->state - tr->state) * (4.19 * flow_rate->state) / 3600.0f;
 
-    if (m_thermal_power_sensor_raw != nullptr) {
-        m_thermal_power_sensor_raw->publish_state(m_thermal_power_raw);
-    }
+    m_thermal_power_raw_sensor->publish(thermal_power_raw);
+    m_thermal_power_sensor->publish(thermal_power_raw);
 }
 
 void DaikinRotexCanComponent::update_temperature_spread() {
-    if (m_temperature_spread_sensor == nullptr) {
-        return;
-    }
-
     CanSensor const* tv = m_entity_manager.get_sensor("tv");
     CanSensor const* tr = m_entity_manager.get_sensor("tr");
 
-    if (tv == nullptr) {
-        ESP_LOGE(TAG, "tv is not configured!");
-        return;
-    }
-    if (tr == nullptr) {
-        ESP_LOGE(TAG, "tr is not configured!");
-        return;
-    }
+    if (tv != nullptr && tr != nullptr) {
+        const float temperature_spread = tv->state - tr->state;
 
-    m_temperature_spread_sensor->publish_state(tv->state - tr->state);
+        m_temperature_spread_sensor->publish(temperature_spread);
+        m_temperature_spread_raw_sensor->publish(temperature_spread);
+    }
 }
 
 bool DaikinRotexCanComponent::on_custom_select(std::string const& id, uint8_t value) {
@@ -209,6 +202,10 @@ void DaikinRotexCanComponent::on_betriebsart(TEntity::TVariant const& current, T
         } else {
             ESP_LOGE(TAG, "on_betriebsart(): current has no valid string value!");
         }
+    }
+
+    if (current != previous) {
+        m_low_temperature_spread_timestamp = 0;
     }
 }
 
@@ -314,30 +311,12 @@ void DaikinRotexCanComponent::loop() {
         }
     }
 
-    if (m_thermal_power_sensor != nullptr) {
-        const float dt = (millis() - m_pid.get_last_update()) / 1000.0f; // seconds
-        if (dt > 10.0f) {
-            if (!std::isnan(m_thermal_power_raw)) {
-                float smoothed_tp = m_thermal_power_sensor->get_state();
-
-                if (std::isnan(smoothed_tp)) {
-                    smoothed_tp = m_thermal_power_raw;
-                }
-
-                const float pid_output = m_pid.compute(m_thermal_power_raw, smoothed_tp, dt);
-
-                ESP_LOGW(TAG, "loop raw: %f, smooth: %f, dt: %f, out: %f", m_thermal_power_raw, smoothed_tp, dt, pid_output);
-
-                smoothed_tp += pid_output;
-
-                float smoothed_tp_rounded = std::ceil(smoothed_tp * 100.0) / 100.0;
-                m_thermal_power_sensor->publish_state(smoothed_tp_rounded);
-            } else {
-                m_thermal_power_sensor->publish_state(m_thermal_power_raw);
-            }
-            m_pid.set_last_update(millis());
-        }
+    const uint32_t millis = ::millis();
+    for (TEntity* pEntity : m_entity_manager.get_entities()) {
+        pEntity->update(millis);
     }
+    m_thermal_power_sensor->update(millis);
+    m_temperature_spread_sensor->update(millis);
 }
 
 void DaikinRotexCanComponent::handle(uint32_t can_id, std::vector<uint8_t> const& data) {
@@ -366,7 +345,7 @@ bool DaikinRotexCanComponent::is_command_set(TMessage const& message) {
     return false;
 }
 
-std::string DaikinRotexCanComponent::recalculate_state(EntityBase* pEntity, std::string const& new_state) const {
+std::string DaikinRotexCanComponent::recalculate_state(EntityBase* pEntity, std::string const& new_state) {
     const uint32_t delay = 2*60*1000; // 2 minutes. HPSU v4 immediately changes the BPV position to 100%, which leads to false positives!
 
     CanSensor const* tv = m_entity_manager.get_sensor("tv");
@@ -375,27 +354,60 @@ std::string DaikinRotexCanComponent::recalculate_state(EntityBase* pEntity, std:
     CanSensor const* dhw_mixer_position = m_entity_manager.get_sensor("dhw_mixer_position");
     CanSensor const* bpv = m_entity_manager.get_sensor("bypass_valve");
     CanSensor const* flow_rate = m_entity_manager.get_sensor("flow_rate");
+    CanSensor const* ta = m_entity_manager.get_sensor("temperature_outside");
     CanTextSensor const* error_code = m_entity_manager.get_text_sensor("error_code");
+    CanTextSensor const* p_betriebs_art = m_entity_manager.get_text_sensor(BETRIEBS_ART);
+    CanBinarySensor const* state_compressor = m_entity_manager.get_binary_sensor("status_kompressor");
 
-    if (tv && tvbh && tr && dhw_mixer_position && bpv && flow_rate) {
-        ESP_LOGI(TAG, "tv: %f, tvbh: %f, tr: %f, TvBH-Tv: %f, Tr-TvBH: %f, dhw: %f, bpv: %f, flow: %f, delay: %d, millis: %d, bpv_change: %d",
-            tv->state, tvbh->state, tr->state, m_max_spread.tvbh_tv, m_max_spread.tvbh_tr, dhw_mixer_position->state, bpv->state, flow_rate->state,
-                delay, millis(), (bpv->getLastValueChange()));
-    }
-
-    if (pEntity == error_code && error_code != nullptr) {
-        if (tvbh != nullptr && tv != nullptr && dhw_mixer_position != nullptr && flow_rate != nullptr) {
-            if (tvbh->state > (tv->state + m_max_spread.tvbh_tv) && dhw_mixer_position->state == 0.0f && flow_rate->state > 600.0f) {
-                ESP_LOGE(TAG, "3UV DHW defekt => tvbh: %f, tv: %f, max_spread: %f, bpv: %f, flow_rate: %f",
-                    tvbh->state, tv->state, m_max_spread.tvbh_tv, dhw_mixer_position->state, flow_rate->state);
-                return new_state + "|3UV DHW " + DEFECT;
+    if (error_code != nullptr && pEntity == error_code) {
+        if (tvbh != nullptr && flow_rate != nullptr && flow_rate->state > 600.0f) {
+            if (tv != nullptr && dhw_mixer_position != nullptr) {
+                if (dhw_mixer_position->state == 0.0f && tvbh->state < (tv->state - m_max_spread.tvbh_tv)) {
+                    ESP_LOGE(TAG, "3UV DHW defekt (1) => tvbh: %f, tv: %f, max_spread: %f, bpv: %f, flow_rate: %f",
+                        tvbh->state, tv->state, m_max_spread.tvbh_tv, dhw_mixer_position->state, flow_rate->state);
+                    return new_state + "|3UV DHW " + DEFECT;
+                }
+            }
+            if (tr != nullptr && bpv != nullptr) {
+                if (bpv->state == 100.0f && tr->state < (tvbh->state - m_max_spread.tvbh_tr) && bpv->isChangedInLastMilliseconds(delay)) {
+                    ESP_LOGE(TAG, "3UV BPV defekt (1) => tvbh: %f, tr: %f, max_spread: %f, dhw_mixer_pos: %f, flow_rate: %f",
+                        tvbh->state, tr->state, m_max_spread.tvbh_tr, bpv->state, flow_rate->state);
+                    return new_state + "|3UV BPV " + DEFECT;
+                }
             }
         }
-        if (tvbh != nullptr && tr != nullptr && bpv != nullptr && flow_rate != nullptr) {
-            if (tvbh->state > (tr->state + m_max_spread.tvbh_tr) && bpv->state == 100.0f && millis() > (bpv->getLastValueChange() + delay) && flow_rate->state > 600.0f) {
-                ESP_LOGE(TAG, "3UV BPV defekt => tvbh: %f, tr: %f, max_spread: %f, dhw_mixer_pos: %f, flow_rate: %f",
-                    tvbh->state, tr->state, m_max_spread.tvbh_tr, bpv->state, flow_rate->state);
-                return new_state + "|3UV BPV " + DEFECT;
+        if (p_betriebs_art != nullptr) {
+            if (Utils::is_in(p_betriebs_art->state, STATE_DHW_PRODUCTION, STATE_HEATING)) {
+                /*
+                    Coefficients calculated using the table:
+                    Tv  | minimal temperature spread
+                    50° | 4.0
+                    40° | 3.0
+                    35° | 2.5
+                    29° | 1.2
+                    27° | 0.3
+                 */
+                const float minValue =
+                    -0.00004012 * std::pow(tv->state, 4)
+                    + 0.006683 * std::pow(tv->state, 3)
+                    - 0.4152 * std::pow(tv->state, 2)
+                    + 11.5006 * tv->state
+                    - 117.7908;
+
+                ESP_LOGI(TAG, "recalculate_state() temperature_spread: %f, minValue: %f, tv: %f, millis: %d, ts: %d",
+                    m_temperature_spread_sensor->state, minValue, tv->state, millis(), m_low_temperature_spread_timestamp);
+
+                if (m_temperature_spread_sensor->state < minValue) {
+                    if (m_low_temperature_spread_timestamp > 0) {
+                        if (millis() > (m_low_temperature_spread_timestamp + 20*60*1000)) { // The flow temperature (Vorlauf) may sometimes drop suddenly, even before the mode_of_operating is reported.
+                            return new_state + "|" + LOW_TEMPERATURE_SPREAD;
+                        }
+                    } else if (m_low_temperature_spread_timestamp == 0) {
+                        m_low_temperature_spread_timestamp = millis();
+                    }
+                } else {
+                    m_low_temperature_spread_timestamp = 0u;
+                }
             }
         }
     }

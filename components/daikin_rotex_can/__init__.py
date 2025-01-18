@@ -1369,6 +1369,7 @@ CONF_PROJECT_GIT_HASH = "project_git_hash"
 CONF_THERMAL_POWER = "thermal_power"
 CONF_THERMAL_POWER_RAW = "thermal_power_raw"
 CONF_TEMPERATURE_SPREAD = "temperature_spread"
+CONF_TEMPERATURE_SPREAD_RAW = "temperature_spread_raw"
 
 CONF_DUMP = "dump"
 CONF_DHW_RUN = "dhw_run"
@@ -1453,18 +1454,29 @@ entity_schemas.update({
     ########## Sensors ##########
 
     cv.Optional(CONF_THERMAL_POWER): sensor.sensor_schema(
+        CanSensor,
         device_class=DEVICE_CLASS_POWER,
         unit_of_measurement=UNIT_KILOWATT,
         accuracy_decimals=2,
         state_class=STATE_CLASS_MEASUREMENT
     ),
     cv.Optional(CONF_THERMAL_POWER_RAW): sensor.sensor_schema(
+        CanSensor,
         device_class=DEVICE_CLASS_POWER,
         unit_of_measurement=UNIT_KILOWATT,
         accuracy_decimals=2,
         state_class=STATE_CLASS_MEASUREMENT
     ).extend(),
     cv.Optional(CONF_TEMPERATURE_SPREAD): sensor.sensor_schema(
+        CanSensor,
+        device_class=DEVICE_CLASS_TEMPERATURE,
+        unit_of_measurement=UNIT_CELSIUS,
+        accuracy_decimals=1,
+        state_class=STATE_CLASS_MEASUREMENT,
+        icon="mdi:thermometer-lines"
+    ).extend(),
+    cv.Optional(CONF_TEMPERATURE_SPREAD_RAW): sensor.sensor_schema(
+        CanSensor,
         device_class=DEVICE_CLASS_TEMPERATURE,
         unit_of_measurement=UNIT_CELSIUS,
         accuracy_decimals=1,
@@ -1666,6 +1678,9 @@ async def to_code(config):
         if yaml_sensor_conf := entities.get(CONF_TEMPERATURE_SPREAD):
             sens = await sensor.new_sensor(yaml_sensor_conf)
             cg.add(var.set_temperature_spread(sens))
+        if yaml_sensor_conf := entities.get(CONF_TEMPERATURE_SPREAD_RAW):
+            sens = await sensor.new_sensor(yaml_sensor_conf)
+            cg.add(var.set_temperature_spread_raw(sens))
 
         ########## Buttons ##########
 

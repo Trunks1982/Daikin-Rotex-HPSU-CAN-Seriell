@@ -27,15 +27,12 @@ public:
     void set_canbus(esphome::esp32_can::ESP32Can* pCanbus);
     void set_update_interval(uint16_t seconds) {} // dummy
     void set_project_git_hash(text_sensor::TextSensor* pSensor, std::string const& hash) { m_project_git_hash_sensor = pSensor; m_project_git_hash = hash; }
-    void set_thermal_power_sensor(sensor::Sensor* pSensor) { m_thermal_power_sensor = pSensor; }
-    void set_thermal_power_sensor_raw(sensor::Sensor* pSensor) { m_thermal_power_sensor_raw = pSensor; }
-    void set_temperature_spread(sensor::Sensor* pSensor) { m_temperature_spread_sensor = pSensor; }
+    void set_thermal_power_sensor(CanSensor* pSensor) { m_thermal_power_sensor = pSensor; pSensor->set_smooth(true); }
+    void set_thermal_power_sensor_raw(CanSensor* pSensor) { m_thermal_power_raw_sensor = pSensor; }
+    void set_temperature_spread(CanSensor* pSensor) { m_temperature_spread_sensor = pSensor; pSensor->set_smooth(true); }
+    void set_temperature_spread_raw(CanSensor* pSensor) { m_temperature_spread_raw_sensor = pSensor; }
     void set_max_spread(float tvbh_tv, float tvbh_tr) { m_max_spread = { tvbh_tv, tvbh_tr };}
-    void add_entity(EntityBase* pEntity) {
-        if (TEntity* pRequest = dynamic_cast<TEntity*>(pEntity)) {
-            m_entity_manager.add(pRequest);
-        }
-    }
+    void add_entity(TEntity* pEntity) { m_entity_manager.add(pEntity); }
 
     void on_post_handle(TEntity* pRequest, TEntity::TVariant const& current, TEntity::TVariant const& previous);
 
@@ -77,10 +74,9 @@ private:
     bool on_custom_select(std::string const& id, uint8_t value);
     void on_betriebsart(TEntity::TVariant const& current, TEntity::TVariant const& previous);
 
-    float getSensorState(std::string const& name);
     void throwPeriodicError(std::string const& message);
     bool is_command_set(TMessage const&);
-    std::string recalculate_state(EntityBase* pEntity, std::string const& new_state) const;
+    std::string recalculate_state(EntityBase* pEntity, std::string const& new_state);
 
     esphome::daikin_rotex_can::TEntityManager m_entity_manager;
     std::shared_ptr<esphome::canbus::CanbusTrigger> m_canbus_trigger;
@@ -94,12 +90,12 @@ private:
     std::string m_project_git_hash;
     esphome::esp32_can::ESP32Can* m_pCanbus;
 
-    sensor::Sensor* m_thermal_power_sensor;
-    sensor::Sensor* m_thermal_power_sensor_raw;
-    sensor::Sensor* m_temperature_spread_sensor;
+    CanSensor* m_thermal_power_sensor;
+    CanSensor* m_thermal_power_raw_sensor;
+    CanSensor* m_temperature_spread_sensor;
+    CanSensor* m_temperature_spread_raw_sensor;
     MaxSpread m_max_spread;
-    float m_thermal_power_raw;
-    PID m_pid;
+    uint32_t m_low_temperature_spread_timestamp;
 };
 
 inline void DaikinRotexCanComponent::set_canbus(esphome::esp32_can::ESP32Can* pCanbus) {

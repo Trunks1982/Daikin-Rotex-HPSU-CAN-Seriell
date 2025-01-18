@@ -89,9 +89,7 @@ public:
     };
 
 public:
-    TEntity()
-    {
-    }
+    TEntity();
 
     std::string const& get_id() const { return m_config.id; }
 
@@ -115,6 +113,10 @@ public:
         return m_last_value_change_timestamp;
     }
 
+    bool isChangedInLastMilliseconds(uint32_t milliseconds) const {
+        return millis() > (getLastValueChange() + milliseconds);
+    }
+
     void set_canbus(esphome::esp32_can::ESP32Can* pCanbus) {
         m_pCanbus = pCanbus;
     }
@@ -135,6 +137,8 @@ public:
     TEntityArguments const& get_config() const {
         return m_config;
     }
+
+    virtual void update(uint32_t millis);
 
     bool isMatch(uint32_t can_id, TMessage const& responseData) const;
     bool handle(uint32_t can_id, TMessage const& responseData);
