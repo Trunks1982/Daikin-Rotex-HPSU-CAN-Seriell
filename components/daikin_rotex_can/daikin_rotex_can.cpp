@@ -32,12 +32,14 @@ DaikinRotexCanComponent::DaikinRotexCanComponent()
 , m_project_git_hash_sensor(nullptr)
 , m_project_git_hash()
 , m_thermal_power_sensor(nullptr)
-, m_thermal_power_sensor_raw(nullptr)
-, m_temperature_spread_sensor(nullptr)
+, m_thermal_power_raw_sensor(nullptr)
+, m_temperature_spread_sensor(new CanSensorDummy())
+, m_temperature_spread_raw_sensor(nullptr)
 , m_thermal_power_raw(std::numeric_limits<float>::quiet_NaN())
 , m_pid(0.2, 0.05f, 0.05f, 0.2, 0.2, 0.1f)
 , m_low_temperature_spread_timestamp(0u)
 {
+    m_temperature_spread_sensor->set_smooth(true);
 }
 
 void DaikinRotexCanComponent::setup() {
@@ -141,16 +143,15 @@ void DaikinRotexCanComponent::update_thermal_power() {
 
     m_thermal_power_raw = (tv->state - tr->state) * (4.19 * flow_rate->state) / 3600.0f;
 
-    if (m_thermal_power_sensor_raw != nullptr) {
-        m_thermal_power_sensor_raw->publish_state(m_thermal_power_raw);
+    if (m_thermal_power_raw_sensor != nullptr) {
+        m_thermal_power_raw_sensor->publish(m_thermal_power_raw);
+    }
+    if (m_thermal_power_sensor != nullptr) {
+        m_thermal_power_sensor->publish(m_thermal_power_raw);
     }
 }
 
 void DaikinRotexCanComponent::update_temperature_spread() {
-    if (m_temperature_spread_sensor == nullptr) {
-        return;
-    }
-
     CanSensor const* tv = m_entity_manager.get_sensor("tv");
     CanSensor const* tr = m_entity_manager.get_sensor("tr");
 
@@ -163,7 +164,13 @@ void DaikinRotexCanComponent::update_temperature_spread() {
         return;
     }
 
-    m_temperature_spread_sensor->publish_state(tv->state - tr->state);
+    const float temperature_spread = tv->state - tr->state;
+
+    ESP_LOGE(TAG, "update_temperature_spread: %f", temperature_spread);
+    m_temperature_spread_sensor->publish(temperature_spread);
+    if (m_temperature_spread_raw_sensor != nullptr) {
+        m_temperature_spread_raw_sensor->publish(temperature_spread);
+    }
 }
 
 bool DaikinRotexCanComponent::on_custom_select(std::string const& id, uint8_t value) {
@@ -323,27 +330,14 @@ void DaikinRotexCanComponent::loop() {
         }
     }
 
-    if (m_thermal_power_sensor != nullptr) {
-        const float dt = (millis() - m_pid.get_last_update()) / 1000.0f; // seconds
-        if (dt > 10.0f) {
-            if (!std::isnan(m_thermal_power_raw)) {
-                float smoothed_tp = m_thermal_power_sensor->get_state();
-
-                if (std::isnan(smoothed_tp)) {
-                    smoothed_tp = m_thermal_power_raw;
-                }
-
-                const float pid_output = m_pid.compute(m_thermal_power_raw, smoothed_tp, dt);
-                smoothed_tp += pid_output;
-
-                float smoothed_tp_rounded = std::ceil(smoothed_tp * 100.0) / 100.0;
-                m_thermal_power_sensor->publish_state(smoothed_tp_rounded);
-            } else {
-                m_thermal_power_sensor->publish_state(m_thermal_power_raw);
-            }
-            m_pid.set_last_update(millis());
-        }
+    const uint32_t millis = ::millis();
+    for (TEntity* pEntity : m_entity_manager.get_entities()) {
+        pEntity->update(millis);
     }
+    if (m_thermal_power_sensor != nullptr) {
+        m_thermal_power_sensor->update(millis);
+    }
+    m_temperature_spread_sensor->update(millis);
 }
 
 void DaikinRotexCanComponent::handle(uint32_t can_id, std::vector<uint8_t> const& data) {
@@ -370,21 +364,6 @@ bool DaikinRotexCanComponent::is_command_set(TMessage const& message) {
         }
     }
     return false;
-}
-
-float DaikinRotexCanComponent::get_temperature_spread() const {
-    if (m_temperature_spread_sensor != nullptr) {
-        return m_temperature_spread_sensor->state;
-    }
-
-    CanSensor const* tv = m_entity_manager.get_sensor("tv");
-    CanSensor const* tr = m_entity_manager.get_sensor("tr");
-
-    if (tv != nullptr && tr != nullptr) {
-        return tv->state - tr->state;
-    }
-
-    return std::numeric_limits<float>::quiet_NaN();
 }
 
 std::string DaikinRotexCanComponent::recalculate_state(EntityBase* pEntity, std::string const& new_state) {
@@ -420,8 +399,26 @@ std::string DaikinRotexCanComponent::recalculate_state(EntityBase* pEntity, std:
         }
         if (p_betriebs_art != nullptr) {
             if (Utils::is_in(p_betriebs_art->state, STATE_DHW_PRODUCTION, STATE_HEATING)) {
-                ESP_LOGE(TAG, "recalculate_state(): spread: %f, millis: %d, ts: %d", get_temperature_spread(), millis(), m_low_temperature_spread_timestamp);
-                if (get_temperature_spread() < 2.0f) {
+                /*
+                    Coefficients calculated using the table:
+                    Tv  | minimal temperature spread
+                    50° | 4.0
+                    40° | 3.0
+                    35° | 2.5
+                    29° | 1.2
+                    27° | 0.3
+                 */
+                const float minValue =
+                    -0.00004012 * std::pow(tv->state, 4)
+                    + 0.006683 * std::pow(tv->state, 3)
+                    - 0.4152 * std::pow(tv->state, 2)
+                    + 11.5006 * tv->state
+                    - 117.7908;
+
+                ESP_LOGE(TAG, "recalculate_state(): spread: %f, minValue: %f, millis: %d, ts: %d",
+                    m_temperature_spread_sensor->state, minValue, millis(), m_low_temperature_spread_timestamp);
+
+                if (m_temperature_spread_sensor->state < minValue) {
                     if (m_low_temperature_spread_timestamp > 0) {
                         if (millis() > (m_low_temperature_spread_timestamp + 20*60*1000)) { // The flow temperature (Vorlauf) may sometimes drop suddenly, even before the mode_of_operating is reported.
                             return new_state + "|" + LOW_TEMPERATURE_SPREAD;

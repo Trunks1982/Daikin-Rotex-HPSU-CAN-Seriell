@@ -89,9 +89,7 @@ public:
     };
 
 public:
-    TEntity()
-    {
-    }
+    TEntity();
 
     std::string const& get_id() const { return m_config.id; }
 
@@ -139,6 +137,8 @@ public:
     TEntityArguments const& get_config() const {
         return m_config;
     }
+
+    virtual void update(uint32_t millis);
 
     bool isMatch(uint32_t can_id, TMessage const& responseData) const;
     bool handle(uint32_t can_id, TMessage const& responseData);

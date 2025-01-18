@@ -181,12 +181,15 @@ TEntity* TEntityManager::getNextRequestToSend() {
         }
     }
 
+    TEntity* pNext = nullptr;
     for (auto pEntity : m_entities) {
         if (pEntity->is_command_set() && pEntity->isGetNeeded()) {
-            return pEntity;
+            if (pNext == nullptr || pEntity->getLastUpdate() < pNext->getLastUpdate()) {
+                pNext = pEntity;
+            }
         }
     }
-    return nullptr;
+    return pNext;
 }
 
 

@@ -1,11 +1,22 @@
 #include "esphome/components/daikin_rotex_can/entity.h"
 #include "esphome/components/esp32_can/esp32_can.h"
-#include "esphome/core/hal.h"
+#include "esphome/core/log.h"
 
 namespace esphome {
 namespace daikin_rotex_can {
 
 static const char* TAG = "daikin_rotex_can";
+
+TEntity::TEntity()
+: m_config()
+, m_pCanbus(nullptr)
+, m_expected_reponse()
+, m_last_handle_timestamp(0u)
+, m_last_get_timestamp(0u)
+, m_last_value_change_timestamp(0u)
+, m_post_handle_lambda()
+{
+}
 
 std::array<uint16_t, 7> TEntity::calculate_reponse(TMessage const& message) {
     const uint16_t DC = 0xFFFF;
@@ -21,8 +32,7 @@ std::array<uint16_t, 7> TEntity::calculate_reponse(TMessage const& message) {
 }
 
 bool TEntity::isGetInProgress() const {
-    uint32_t mil = millis();
-    return m_last_get_timestamp > m_last_handle_timestamp && ((mil - m_last_get_timestamp) < 3*1000); // Consider 3 sek => package is lost
+    return m_last_get_timestamp > m_last_handle_timestamp && ((millis() - m_last_get_timestamp) < 3*1000); // Consider 3 sek => package is lost
 }
 
 bool TEntity::isMatch(uint32_t can_id, TMessage const& responseData) const {
@@ -144,6 +154,12 @@ bool TEntity::sendSet(esphome::esp32_can::ESP32Can* pCanBus, float value) {
     sendGet(pCanBus);
 
     return true;
+}
+
+void TEntity::update(uint32_t millis) {
+    if (isGetInProgress() && millis > (m_last_get_timestamp + 5 * 1000)) {
+        ESP_LOGE(TAG, "TEntity::update() sedGet timeout! id: %s", m_config.id.c_str());
+    }
 }
 
 }
