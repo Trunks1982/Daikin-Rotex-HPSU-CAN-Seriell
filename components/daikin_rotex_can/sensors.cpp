@@ -45,7 +45,10 @@ void CanSensor::update(uint32_t millis) {
             if (std::isnan(m_smooth_state)) {
                 m_smooth_state = m_state;
             }
-            m_smooth_state += m_pid.compute(m_state, m_smooth_state, dt);
+            std::string str;
+            const float pid_output = m_pid.compute(m_state, m_smooth_state, dt, str);
+            m_smooth_state += pid_output;
+            ESP_LOGW(TAG, "loop raw: %f, smooth: %f, dt: %f, out: %f, %s", m_state, m_smooth_state, dt, pid_output, str.c_str());
             m_smooth_state = std::ceil(m_smooth_state * 100.0) / 100.0;
 
             publish_state(m_smooth_state);

@@ -21,8 +21,11 @@ public:
     {
     }
 
-    float compute(float setpoint, float current_value, float dt) {
+    float compute(float setpoint, float current_value, float dt, std::string& str) {
         const float error = setpoint - current_value;
+
+        str += "|" + Utils::format("sp: %f, cv: %f, e: %f", setpoint, current_value, error);
+        str += "|" + Utils::format("ap: %f, fp: %f", m_alpha_p, m_filtered_p);
 
          // P-Anteil filtern
         m_filtered_p = m_alpha_p * error + (1 - m_alpha_p) * m_filtered_p;
@@ -36,12 +39,17 @@ public:
 
         // D-Anteil filtern
         float derivative = (error - m_previous_error) / dt;
+
+        str += "|" + Utils::format("ad: %f, pe: %f, d: %f", m_alpha_d, m_previous_error, derivative);
+
         m_filtered_d = m_alpha_d * derivative + (1 - m_alpha_d) * m_filtered_d;
         float d_term = m_d * m_filtered_d;
 
         // Gesamtausgang
         float output = p_term + i_term + d_term;
         m_previous_error = error;
+
+        str += "|" + Utils::format("p: %f, i: %f, d: %f, mfd: %f", p_term, i_term, d_term, m_filtered_d);
 
         m_last_update = millis();
         return output;
