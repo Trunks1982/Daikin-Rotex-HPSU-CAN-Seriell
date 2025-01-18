@@ -39,11 +39,6 @@ private:
     float m_smooth_state;
 };
 
-class CanSensorDummy : public CanSensor {
-public:
-    void publish_state(float state) { this->state = state; }
-};
-
 /////////////////////// CanTextSensor ///////////////////////
 
 class CanTextSensor : public text_sensor::TextSensor, public TEntity, public Parented<SensorAccessor> {

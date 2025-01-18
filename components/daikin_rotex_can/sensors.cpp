@@ -45,11 +45,8 @@ void CanSensor::update(uint32_t millis) {
             if (std::isnan(m_smooth_state)) {
                 m_smooth_state = m_state;
             }
-            ESP_LOGE(TAG, "xxx m_state: %f, m_smooth_state: %f", m_state, m_smooth_state);
             m_smooth_state += m_pid.compute(m_state, m_smooth_state, dt);
             m_smooth_state = std::ceil(m_smooth_state * 100.0) / 100.0;
-
-            ESP_LOGE(TAG, "yyy m_smooth_state: %f", m_smooth_state);
 
             publish_state(m_smooth_state);
         }

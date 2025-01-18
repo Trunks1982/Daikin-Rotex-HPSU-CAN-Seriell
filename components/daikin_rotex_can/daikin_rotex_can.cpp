@@ -31,12 +31,10 @@ DaikinRotexCanComponent::DaikinRotexCanComponent()
 , m_optimized_defrosting(false)
 , m_project_git_hash_sensor(nullptr)
 , m_project_git_hash()
-, m_thermal_power_sensor(nullptr)
-, m_thermal_power_raw_sensor(nullptr)
-, m_temperature_spread_sensor(new CanSensorDummy())
-, m_temperature_spread_raw_sensor(nullptr)
-, m_thermal_power_raw(std::numeric_limits<float>::quiet_NaN())
-, m_pid(0.2, 0.05f, 0.05f, 0.2, 0.2, 0.1f)
+, m_thermal_power_sensor(new CanSensor()) // Create dummy sensors to avoid nullptr without HA api communicaction. Can be overwritten by the user.
+, m_thermal_power_raw_sensor(new CanSensor())
+, m_temperature_spread_sensor(new CanSensor()) // Used to detect valve malfunctions, even if the sensor has not been defined by the user.
+, m_temperature_spread_raw_sensor(new CanSensor())
 , m_low_temperature_spread_timestamp(0u)
 {
     m_temperature_spread_sensor->set_smooth(true);
@@ -141,34 +139,20 @@ void DaikinRotexCanComponent::update_thermal_power() {
         return;
     }
 
-    m_thermal_power_raw = (tv->state - tr->state) * (4.19 * flow_rate->state) / 3600.0f;
+    const float thermal_power_raw = (tv->state - tr->state) * (4.19 * flow_rate->state) / 3600.0f;
 
-    if (m_thermal_power_raw_sensor != nullptr) {
-        m_thermal_power_raw_sensor->publish(m_thermal_power_raw);
-    }
-    if (m_thermal_power_sensor != nullptr) {
-        m_thermal_power_sensor->publish(m_thermal_power_raw);
-    }
+    m_thermal_power_raw_sensor->publish(thermal_power_raw);
+    m_thermal_power_sensor->publish(thermal_power_raw);
 }
 
 void DaikinRotexCanComponent::update_temperature_spread() {
     CanSensor const* tv = m_entity_manager.get_sensor("tv");
     CanSensor const* tr = m_entity_manager.get_sensor("tr");
 
-    if (tv == nullptr) {
-        ESP_LOGE(TAG, "tv is not configured!");
-        return;
-    }
-    if (tr == nullptr) {
-        ESP_LOGE(TAG, "tr is not configured!");
-        return;
-    }
+    if (tv != nullptr && tr != nullptr) {
+        const float temperature_spread = tv->state - tr->state;
 
-    const float temperature_spread = tv->state - tr->state;
-
-    ESP_LOGE(TAG, "update_temperature_spread: %f", temperature_spread);
-    m_temperature_spread_sensor->publish(temperature_spread);
-    if (m_temperature_spread_raw_sensor != nullptr) {
+        m_temperature_spread_sensor->publish(temperature_spread);
         m_temperature_spread_raw_sensor->publish(temperature_spread);
     }
 }
@@ -334,9 +318,7 @@ void DaikinRotexCanComponent::loop() {
     for (TEntity* pEntity : m_entity_manager.get_entities()) {
         pEntity->update(millis);
     }
-    if (m_thermal_power_sensor != nullptr) {
-        m_thermal_power_sensor->update(millis);
-    }
+    m_thermal_power_sensor->update(millis);
     m_temperature_spread_sensor->update(millis);
 }
 
@@ -415,8 +397,8 @@ std::string DaikinRotexCanComponent::recalculate_state(EntityBase* pEntity, std:
                     + 11.5006 * tv->state
                     - 117.7908;
 
-                ESP_LOGE(TAG, "recalculate_state(): spread: %f, minValue: %f, millis: %d, ts: %d",
-                    m_temperature_spread_sensor->state, minValue, millis(), m_low_temperature_spread_timestamp);
+                ESP_LOGI(TAG, "recalculate_state() temperature_spread: %f, minValue: %f, tv: %f, millis: %d, ts: %d",
+                    m_temperature_spread_sensor->state, minValue, tv->state, millis(), m_low_temperature_spread_timestamp);
 
                 if (m_temperature_spread_sensor->state < minValue) {
                     if (m_low_temperature_spread_timestamp > 0) {

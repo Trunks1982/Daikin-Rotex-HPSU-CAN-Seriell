@@ -95,8 +95,6 @@ private:
     CanSensor* m_temperature_spread_sensor;
     CanSensor* m_temperature_spread_raw_sensor;
     MaxSpread m_max_spread;
-    float m_thermal_power_raw;
-    PID m_pid;
     uint32_t m_low_temperature_spread_timestamp;
 };
 
