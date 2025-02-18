@@ -1347,7 +1347,70 @@ sensor_configuration = [
             0x00: delayed_translate("off"),
             0x01: delayed_translate("on")
         }
-    }
+    },
+    {
+        "type": "number",
+        "name": "system_date_day",
+        "accuracy_decimals": 0,
+        "min_value": 1,
+        "max_value": 31,
+        "step": 1,
+        "command": "31 00 FA 01 22 00 00",
+        "data_offset": 5,
+        "data_size": 1
+    },
+    {
+        "type": "number",
+        "name": "system_date_month",
+        "accuracy_decimals": 0,
+        "min_value": 1,
+        "max_value": 12,
+        "step": 1,
+        "command": "31 00 FA 01 23 00 00",
+        "data_offset": 5,
+        "data_size": 1
+    },
+    {
+        "type": "number",
+        "name": "system_date_year",
+        "accuracy_decimals": 0,
+        "min_value": 20,
+        "max_value": 99,
+        "step": 1,
+        "command": "31 00 FA 01 24 00 00",
+        "data_offset": 5,
+        "data_size": 1
+    },
+    {
+        "type": "number",
+        "name": "system_time_hour",
+        "accuracy_decimals": 0,
+        "min_value": 0,
+        "max_value": 23,
+        "step": 1,
+        "command": "31 00 FA 01 25 00 00",
+        "data_offset": 5,
+        "data_size": 1
+    },
+    {
+        "type": "number",
+        "name": "system_time_minute",
+        "accuracy_decimals": 0,
+        "min_value": 0,
+        "max_value": 59,
+        "step": 1,
+        "command": "31 00 FA 01 26 00 00",
+        "data_offset": 5,
+        "data_size": 1
+    },
+    #{
+    #    "type": "text_sensor",
+    #    "name": "system_time",
+    #    "accuracy_decimals": 0,
+    #    "handle_lambda": """
+    #        return ((data[5] << 8) | data[6]) / 0x64;
+    #    """
+    #}
 ]
 
 CODEOWNERS = ["@wrfz"]
