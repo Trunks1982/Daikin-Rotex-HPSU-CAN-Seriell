@@ -100,10 +100,8 @@ bool TEntity::handle(uint32_t can_id, TMessage const& responseData) {
                 value = "Unsupported value type!";
             }
 
-            if (m_config.log) {
-                Utils::log("handle ", "%s<%s> can_id<%s> data<%s> changed<%d>",
-                    getName().c_str(), value.c_str(), Utils::to_hex(can_id).c_str(), Utils::to_hex(responseData).c_str(), changed);
-            }
+            Utils::log("handle ", "%s<%s> can_id<%s> data<%s> changed<%d>",
+                getName().c_str(), value.c_str(), Utils::to_hex(can_id).c_str(), Utils::to_hex(responseData).c_str(), changed);
         }
         m_last_handle_timestamp = millis();
         return true;

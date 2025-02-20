@@ -34,7 +34,6 @@ public:
         bool isSigned;
         std::list<std::string> update_entity;
         uint16_t update_interval;
-        bool log;
         THandleFunc handle_lambda;
         TUpdateFunc update_lambda;
         TSetFunc set_lambda;
@@ -53,7 +52,6 @@ public:
         , isSigned(false)
         , update_entity({})
         , update_interval(1000)
-        , log(true)
         , handle_lambda([](TMessage const&){ return 0; })
         , update_lambda([](IAccessor const&){ return ""; })
         , set_lambda([](TMessage&, uint16_t){})
@@ -74,7 +72,6 @@ public:
             bool _isSigned,
             std::list<std::string> const& _update_entity,
             uint16_t _update_interval,
-            bool _log,
             THandleFunc _handle_lambda,
             TUpdateFunc _update_lambda,
             TSetFunc _set_lambda,
@@ -92,7 +89,6 @@ public:
         , isSigned(_isSigned)
         , update_entity(_update_entity)
         , update_interval(_update_interval)
-        , log(_log)
         , handle_lambda(_handle_lambda)
         , update_lambda(_update_lambda)
         , set_lambda(_set_lambda)

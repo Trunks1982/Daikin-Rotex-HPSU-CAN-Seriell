@@ -443,6 +443,15 @@ std::string DaikinRotexCanComponent::recalculate_state(EntityBase* pEntity, std:
     return new_state;
 }
 
+float DaikinRotexCanComponent::get_sensor_value(std::string const& id) const {
+    CanSensor const* pSensor = m_entity_manager.get_sensor(id);
+    if (pSensor != nullptr) {
+        return pSensor->state;
+    }
+    ESP_LOGE(TAG, "Entity <%s> doesn't exists!", id.c_str());
+    return std::numeric_limits<float>::quiet_NaN();
+}
+
 float DaikinRotexCanComponent::get_number_value(std::string const& id) const {
     CanNumber const* pNumber = m_entity_manager.get_number(id);
     if (pNumber != nullptr) {

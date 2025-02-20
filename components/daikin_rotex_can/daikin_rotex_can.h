@@ -44,6 +44,7 @@ public:
     virtual void dump() override;
 
     // IAccessor
+    virtual float get_sensor_value(std::string const& sensor_id) const override;
     virtual float get_number_value(std::string const& sensor_id) const override;
 
     void handle(uint32_t can_id, std::vector<uint8_t> const& data);

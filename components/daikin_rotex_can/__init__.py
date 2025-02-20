@@ -1349,86 +1349,61 @@ sensor_configuration = [
         }
     },
     {
-        "type": "number",
+        "type": "sensor",
         "name": "system_date_day",
-        "accuracy_decimals": 0,
-        "min_value": 1,
-        "max_value": 31,
-        "step": 1,
         "command": "31 00 FA 01 22 00 00",
         "data_offset": 5,
         "data_size": 1,
         "update_entities": ["system_date"]
     },
     {
-        "type": "number",
+        "type": "sensor",
         "name": "system_date_month",
-        "accuracy_decimals": 0,
-        "min_value": 1,
-        "max_value": 12,
-        "step": 1,
         "command": "31 00 FA 01 23 00 00",
         "data_offset": 5,
         "data_size": 1,
         "update_entities": ["system_date"]
     },
     {
-        "type": "number",
+        "type": "sensor",
         "name": "system_date_year",
-        "accuracy_decimals": 0,
-        "min_value": 20,
-        "max_value": 99,
-        "step": 1,
         "command": "31 00 FA 01 24 00 00",
         "data_offset": 5,
         "data_size": 1,
         "update_entities": ["system_date"]
     },
     {
-        "type": "number",
+        "type": "sensor",
         "name": "system_time_hour",
-        "accuracy_decimals": 0,
-        "min_value": 0,
-        "max_value": 23,
-        "step": 1,
         "command": "31 00 FA 01 25 00 00",
         "data_offset": 5,
         "data_size": 1,
         "update_entities": ["system_time"]
     },
     {
-        "type": "number",
+        "type": "sensor",
         "name": "system_time_minute",
-        "accuracy_decimals": 0,
-        "min_value": 0,
-        "max_value": 59,
-        "step": 1,
         "command": "31 00 FA 01 26 00 00",
         "data_offset": 5,
         "data_size": 1,
         "update_entities": ["system_time"]
     },
     {
-        "type": "number",
+        "type": "sensor",
         "name": "system_time_second",
-        "accuracy_decimals": 0,
-        "min_value": 0,
-        "max_value": 59,
-        "step": 1,
         "command": "31 00 FA 01 27 00 00",
         "data_offset": 5,
         "data_size": 1,
         "update_entities": ["system_time"],
-        "log": False
     },
     {
         "type": "text_sensor",
         "name": "system_time",
         "update_lambda": """
             return esphome::daikin_rotex_can::Utils::format("%02d:%02d:%02d",
-                static_cast<uint16_t>(accessor.get_number_value("system_time_hour")),
-                static_cast<uint16_t>(accessor.get_number_value("system_time_minute")),
-                static_cast<uint16_t>(accessor.get_number_value("system_time_second"))
+                static_cast<uint16_t>(accessor.get_sensor_value("system_time_hour")),
+                static_cast<uint16_t>(accessor.get_sensor_value("system_time_minute")),
+                static_cast<uint16_t>(accessor.get_sensor_value("system_time_second"))
             );
         """
     },
@@ -1437,9 +1412,9 @@ sensor_configuration = [
         "name": "system_date",
         "update_lambda": """
             return esphome::daikin_rotex_can::Utils::format("%02d:%02d:%04d",
-                static_cast<uint16_t>(accessor.get_number_value("system_date_day")),
-                static_cast<uint16_t>(accessor.get_number_value("system_date_month")),
-                static_cast<uint16_t>(accessor.get_number_value("system_date_year")) + 2000
+                static_cast<uint16_t>(accessor.get_sensor_value("system_date_day")),
+                static_cast<uint16_t>(accessor.get_sensor_value("system_date_month")),
+                static_cast<uint16_t>(accessor.get_sensor_value("system_date_year")) + 2000
             );
         """
     }
@@ -1486,9 +1461,9 @@ for sensor_conf in sensor_configuration:
                 cv.Optional(name): sensor.sensor_schema(
                     CanSensor,
                     device_class=(sensor_conf.get("device_class") if sensor_conf.get("device_class") != None else sensor._UNDEF),
-                    unit_of_measurement=sensor_conf.get("unit_of_measurement"),
-                    accuracy_decimals=sensor_conf.get("accuracy_decimals"),
-                    state_class=sensor_conf.get("state_class"),
+                    unit_of_measurement=sensor_conf.get("unit_of_measurement", sensor._UNDEF),
+                    accuracy_decimals=sensor_conf.get("accuracy_decimals", sensor._UNDEF),
+                    state_class=sensor_conf.get("state_class", sensor._UNDEF),
                     icon=sensor_conf.get("icon", sensor._UNDEF)
                 ).extend({cv.Optional(CONF_UPDATE_INTERVAL): cv.uint16_t}),
             })
@@ -1741,7 +1716,7 @@ async def to_code(config):
                     )
 
                 async def update_lambda():
-                    lamb = str(sens_conf.get("update_lambda")) if "update_lambda" in sens_conf else "return \"\";"
+                    lamb = str(sens_conf.get("update_lambda")) if "update_lambda" in sens_conf else "return {};"
                     return await cg.process_lambda(
                         Lambda(lamb),
                         [(accessor_const_ref, "accessor")],
@@ -1768,7 +1743,6 @@ async def to_code(config):
                         divider,
                         sens_conf.get("signed", False),
                         sens_conf.get("update_entities", []),
-                        sens_conf.get("log", True),
                         update_interval,
                         await handle_lambda(),
                         await update_lambda(),
