@@ -11,7 +11,7 @@
 namespace esphome {
 namespace daikin_rotex_can {
 
-class DaikinRotexCanComponent: public Component, public SensorAccessor {
+class DaikinRotexCanComponent: public Component, public SensorAccessor, public IAccessor {
     struct MaxSpread {
         float tvbh_tv;
         float tvbh_tr;
@@ -42,6 +42,9 @@ public:
     // Buttons
     virtual void dhw_run() override;
     virtual void dump() override;
+
+    // IAccessor
+    virtual float get_number_value(std::string const& sensor_id) const override;
 
     void handle(uint32_t can_id, std::vector<uint8_t> const& data);
 

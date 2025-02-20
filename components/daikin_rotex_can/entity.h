@@ -1,5 +1,6 @@
 #pragma once
 
+#include "esphome/components/daikin_rotex_can/accessor.h"
 #include "esphome/components/daikin_rotex_can/types.h"
 #include "esphome/components/daikin_rotex_can/utils.h"
 #include "esphome/components/esp32_can/esp32_can.h"
@@ -17,6 +18,7 @@ class TEntity {
 
 public:
     using THandleFunc = std::function<uint16_t(TMessage const&)>;
+    using TUpdateFunc = std::function<std::string(IAccessor const&)>;
     using TSetFunc = std::function<void(TMessage&, uint16_t)>;
     using TVariant = std::variant<uint32_t, uint8_t, float, bool, std::string>;
     using TPostHandleLabda = std::function<void(TEntity*, TEntity::TVariant const&, TEntity::TVariant const&)>;
@@ -32,9 +34,12 @@ public:
         bool isSigned;
         std::list<std::string> update_entity;
         uint16_t update_interval;
+        bool log;
         THandleFunc handle_lambda;
+        TUpdateFunc update_lambda;
         TSetFunc set_lambda;
         bool handle_lambda_set;
+        bool update_lambda_set;
         bool set_lambda_set;
 
         TEntityArguments()
@@ -48,9 +53,12 @@ public:
         , isSigned(false)
         , update_entity({})
         , update_interval(1000)
+        , log(true)
         , handle_lambda([](TMessage const&){ return 0; })
+        , update_lambda([](IAccessor const&){ return ""; })
         , set_lambda([](TMessage&, uint16_t){})
         , handle_lambda_set(false)
+        , update_lambda_set(false)
         , set_lambda_set(false)
         {
         }
@@ -66,9 +74,12 @@ public:
             bool _isSigned,
             std::list<std::string> const& _update_entity,
             uint16_t _update_interval,
+            bool _log,
             THandleFunc _handle_lambda,
+            TUpdateFunc _update_lambda,
             TSetFunc _set_lambda,
             bool _handle_lambda_set,
+            bool _update_lambda_set,
             bool _set_lambda_set
         )
         : pEntity(_pEntity)
@@ -81,9 +92,12 @@ public:
         , isSigned(_isSigned)
         , update_entity(_update_entity)
         , update_interval(_update_interval)
+        , log(_log)
         , handle_lambda(_handle_lambda)
+        , update_lambda(_update_lambda)
         , set_lambda(_set_lambda)
         , handle_lambda_set(_handle_lambda_set)
+        , update_lambda_set(_update_lambda_set)
         , set_lambda_set(_set_lambda_set)
         {}
     };
@@ -121,9 +135,10 @@ public:
         m_pCanbus = pCanbus;
     }
 
-    void set_entity(std::string const& name, TEntityArguments&& arg) {
+    void set_entity(std::string const& name, TEntityArguments&& arg, IAccessor const* accessor) {
         m_config = std::move(arg);
         m_expected_reponse = TEntity::calculate_reponse(m_config.command);
+        m_pAccessor = accessor;
     }
 
     void set_post_handle(TPostHandleLabda&& func) {
@@ -170,6 +185,7 @@ protected:
     esphome::esp32_can::ESP32Can* m_pCanbus;
 
 private:
+    IAccessor const* m_pAccessor;
     std::array<uint16_t, 7> m_expected_reponse;
     uint32_t m_last_handle_timestamp;
     uint32_t m_last_get_timestamp;

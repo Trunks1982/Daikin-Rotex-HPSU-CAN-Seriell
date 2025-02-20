@@ -107,6 +107,18 @@ CanBinarySensor const* TEntityManager::get_binary_sensor(std::string const& id) 
     return nullptr;
 }
 
+CanNumber const* TEntityManager::get_number(std::string const& id) const {
+    EntityBase const* pEntity = get_entity_base(id);
+    if (CanNumber const* pNumber = dynamic_cast<CanNumber const*>(pEntity)) {
+        return pNumber;
+    } else if (pEntity) {
+        ESP_LOGE(TAG, "Entity is not a number: %s", pEntity->get_name().c_str());
+    } else {
+        ESP_LOGE(TAG, "const get_number() => Entity is null!");
+    }
+    return nullptr;
+}
+
 CanSelect* TEntityManager::get_select(std::string const& id) {
     EntityBase* pEntity = get_entity_base(id);
     if (CanSelect* pSelect = dynamic_cast<CanSelect*>(pEntity)) {
@@ -161,6 +173,15 @@ void TEntityManager::handle(uint32_t can_id, TMessage const& responseData) {
     if (!bHandled) {
         Utils::log("unhandled", "can_id<%s> data<%s>", Utils::to_hex(can_id).c_str(), Utils::to_hex(responseData).c_str());
     }
+}
+
+TEntity* TEntityManager::get(std::string const& id) {
+    for (auto pEntity: m_entities) {
+        if (pEntity->get_id() == id) {
+            return pEntity;
+        }
+    }
+    return nullptr;
 }
 
 TEntity const* TEntityManager::get(std::string const& id) const {

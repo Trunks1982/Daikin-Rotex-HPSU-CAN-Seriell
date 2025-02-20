@@ -18,6 +18,7 @@ public:
 
     uint32_t size() const;
     TEntity const* get(uint32_t index) const;
+    TEntity* get(std::string const& id);
     TEntity const* get(std::string const& id) const;
 
     EntityBase* get_entity_base(std::string const& id);
@@ -32,6 +33,8 @@ public:
     CanTextSensor const* get_text_sensor(std::string const& id) const;
 
     CanBinarySensor const* get_binary_sensor(std::string const& id) const;
+
+    CanNumber const* get_number(std::string const& id) const;
 
     CanSelect* get_select(std::string const& id);
     CanSelect const* get_select(std::string const& id) const;

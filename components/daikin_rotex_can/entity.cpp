@@ -10,6 +10,7 @@ static const char* TAG = "daikin_rotex_can";
 TEntity::TEntity()
 : m_config()
 , m_pCanbus(nullptr)
+, m_pAccessor(nullptr)
 , m_expected_reponse()
 , m_last_handle_timestamp(0u)
 , m_last_get_timestamp(0u)
@@ -99,8 +100,10 @@ bool TEntity::handle(uint32_t can_id, TMessage const& responseData) {
                 value = "Unsupported value type!";
             }
 
-            Utils::log("handle ", "%s<%s> can_id<%s> data<%s> changed<%d>",
-                getName().c_str(), value.c_str(), Utils::to_hex(can_id).c_str(), Utils::to_hex(responseData).c_str(), changed);
+            if (m_config.log) {
+                Utils::log("handle ", "%s<%s> can_id<%s> data<%s> changed<%d>",
+                    getName().c_str(), value.c_str(), Utils::to_hex(can_id).c_str(), Utils::to_hex(responseData).c_str(), changed);
+            }
         }
         m_last_handle_timestamp = millis();
         return true;

@@ -120,6 +120,21 @@ void DaikinRotexCanComponent::on_post_handle(TEntity* pEntity, TEntity::TVariant
 }
 
 void DaikinRotexCanComponent::updateState(std::string const& id) {
+    TEntity* pEntity = m_entity_manager.get(id);
+    if (pEntity != nullptr) {
+        TEntity::TEntityArguments const& config = pEntity->get_config();
+        if (config.update_lambda_set) {
+            std::string value = config.update_lambda(*this);
+
+            if (CanTextSensor* pTextSensor = dynamic_cast<CanTextSensor*>(pEntity)) {
+                pTextSensor->publish_state(value);
+            } else {
+                ESP_LOGE(TAG, "Unsupported entityy type: %s", id.c_str());
+            }
+            return;
+        }
+    }
+
     if (id == "thermal_power") {
         update_thermal_power();
     } else if (id == "temperature_spread") {
@@ -426,6 +441,15 @@ std::string DaikinRotexCanComponent::recalculate_state(EntityBase* pEntity, std:
         }
     }
     return new_state;
+}
+
+float DaikinRotexCanComponent::get_number_value(std::string const& id) const {
+    CanNumber const* pNumber = m_entity_manager.get_number(id);
+    if (pNumber != nullptr) {
+        return pNumber->state;
+    }
+    ESP_LOGE(TAG, "Entity <%s> doesn't exists!", id.c_str());
+    return std::numeric_limits<float>::quiet_NaN();
 }
 
 } // namespace daikin_rotex_can
