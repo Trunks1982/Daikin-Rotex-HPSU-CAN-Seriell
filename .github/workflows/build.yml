@@ -5,10 +5,10 @@ on:
     #branches:
     #  - main
     #  - dev
-    paths:
-      - '.github'
-      - 'examples/full_*.yaml'
-      - 'components/**'
+    #paths:
+    #  - '.github'
+    #  - 'examples/full_*.yaml'
+    #  - 'components/**'
   workflow_dispatch:
 
 jobs:
