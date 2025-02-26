@@ -58,9 +58,9 @@ jobs:
 
       - name: Compile ESPHome binaries
         run: |
-          LANGUAGES=("de" "en" "it")
+          for yaml_file in examples/full_*.yaml; do
+            LANG=$(basename "$yaml_file" .yaml | sed 's/full_//')
 
-          for LANG in "${LANGUAGES[@]}"; do
             git reset --hard
             git clean -xdf
 
