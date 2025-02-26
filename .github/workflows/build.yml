@@ -61,15 +61,23 @@ jobs:
           cp .github/workflows/resources/secrets.yaml examples/
           yq eval '.external_components[0].source = {"type": "local", "path": "../components"}' -i examples/full_de.yaml
 
-          cat examples/full_de.yaml
-
-      - name: Compile ESPHome binary
+      - name: Compile ESPHome binaries
         run: |
-          esphome compile examples/full_de.yaml
-          mv examples/.esphome/build/hpsu-can/.pioenvs/hpsu-can/firmware.factory.bin hpsu-can.factory-gpios-tx05-rx06.bin  
+          LANGUAGES=("de" "en" "it")
+
+          for LANG in "${LANGUAGES[@]}"; do
+            git reset --hard
+            git clean -xdf
+
+            cp .github/workflows/resources/secrets.yaml examples/
+
+            yq eval '.external_components[0].source = {"type": "local", "path": "../components"}' -i "examples/full_${LANG}.yaml"
+            esphome compile "examples/full_${LANG}.yaml"
+            mv examples/.esphome/build/hpsu-can/.pioenvs/hpsu-can/firmware.factory.bin "hpsu-can-${LANG}.factory-gpios-tx05-rx06.bin"
+          done
 
       - name: Archive compiled binary
         uses: actions/upload-artifact@v4
         with:
           name: compiled-binary
-          path: hpsu-can.factory-gpios-tx05-rx06.bin
+          path: hpsu-can-de.factory-gpios-tx05-rx06.bin
