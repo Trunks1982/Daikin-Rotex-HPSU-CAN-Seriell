@@ -56,11 +56,6 @@ jobs:
           wget https://github.com/mikefarah/yq/releases/latest/download/yq_linux_amd64 -O /usr/local/bin/yq
           sudo chmod +x /usr/local/bin/yq
 
-      - name: Prepare full_de.yaml
-        run: |
-          cp .github/workflows/resources/secrets.yaml examples/
-          yq eval '.external_components[0].source = {"type": "local", "path": "../components"}' -i examples/full_de.yaml
-
       - name: Compile ESPHome binaries
         run: |
           LANGUAGES=("de" "en" "it")
@@ -80,4 +75,4 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: compiled-binary
-          path: hpsu-can-de.factory-gpios-tx05-rx06.bin
+          path: hpsu-can-*.factory-gpios-tx05-rx06.bin
