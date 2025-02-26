@@ -70,10 +70,19 @@ jobs:
             mv examples/.esphome/build/hpsu-can/.pioenvs/hpsu-can/firmware.factory.bin "bin/hpsu-can-${LANG}.factory-gpios-tx05-rx06.bin"
           done
 
-      - name: Commit and push
+      - name: Archive compiled binaries
         run: |
-          git config --global user.name "github-actions[bot]"
-          git config --global user.email "github-actions[bot]@users.noreply.github.com"
-          git add bin/
-          git commit -m "Update binaries"
-          git push https://github-actions:${{ secrets.GITHUB_TOKEN }}@github.com/Trunks1982/Daikin-Rotex-HPSU-CAN-Seriell.git
+          for bin_file in bin/*.factory-gpios-tx05-rx06.bin; do
+            echo "Archiving $bin_file"
+            # Archive each binary as its own artifact
+            echo "Uploading $bin_file"
+            # Upload each binary as a separate artifact with the same name
+            curl -X POST \
+              -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \
+              -H "Content-Type: application/json" \
+              --data '{
+                "name": "'"$(basename "$bin_file")"'",
+                "path": "'"$bin_file"'"
+              }' \
+              https://uploads.github.com/repos/${{ github.repository }}/actions/artifacts
+          done
