@@ -5,10 +5,10 @@ on:
     #branches:
     #  - main
     #  - dev
-    #paths:
-    #  - '.github'
-    #  - 'examples/full_*.yaml'
-    #  - 'components/**'
+    paths:
+      - '.github/**'
+      - 'examples/full_*.yaml'
+      - 'components/**'
   workflow_dispatch:
 
 jobs:
@@ -59,9 +59,13 @@ jobs:
 
       - name: Prepare examples/full_de.yaml
         run: |
+          echo "copy secrets"
           cp .github/workflows/resources/secrets.yaml .
 
+          echo "copy block"
           cp .github/workflows/src/extract_external_components_block.py .
+
+          echo "copy patch"
           cp .github/workflows/src/patch_full_yaml.sh .
 
           if [ "${{ github.ref }}" == "refs/heads/dev" ]; then 
