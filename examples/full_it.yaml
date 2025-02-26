@@ -343,7 +343,8 @@ daikin_rotex_can:
       name: Temperatura Massima Mandata Obiettivo
     min_target_flow_temp:
       name: Temperatura Minima Mandata Obiettivo
-#Heizk Adaption
+    heating_curve_adaptation:
+      name: Adattamento delle curve di riscaldamento
 
 # Konfiguration -> HZK Konfig -> Kühlen
 

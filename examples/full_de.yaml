@@ -343,7 +343,8 @@ daikin_rotex_can:
       name: Max T-Vorlauf
     min_target_flow_temp:
       name: Min T-Vorlauf
-#Heizk Adaption
+    heating_curve_adaptation:
+      name: Heizk Adaption
 
 # Konfiguration -> HZK Konfig -> Kühlen
 

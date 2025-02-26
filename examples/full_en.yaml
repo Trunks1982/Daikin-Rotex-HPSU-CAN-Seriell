@@ -343,7 +343,8 @@ daikin_rotex_can:
       name: Max Target Flow Temperature
     min_target_flow_temp:
       name: Min Target Flow Temperature
-#Heizk Adaption
+    heating_curve_adaptation:
+      name: Heating Curve Adaptation
 
 # Konfiguration -> HZK Konfig -> Kühlen
 
