@@ -55,6 +55,8 @@ jobs:
 
           sudo apt install yq
 
+          yq --version
+
           # install latest version of cels by using wget, otherwise version 0.1.0 would be installed, which is buggy
           wget https://files.pythonhosted.org/packages/18/82/14819c1cc67c67e909abdbd9824eb756adccd47a1dee1c846f7300716646/cels-0.3.1.tar.gz
           python3 -m pip install cels-0.3.1.tar.gz
