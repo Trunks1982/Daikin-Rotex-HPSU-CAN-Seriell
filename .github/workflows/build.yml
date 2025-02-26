@@ -65,22 +65,24 @@ jobs:
           echo "copy secrets"
           cp .github/workflows/resources/secrets.yaml examples/
 
-          echo "copy block"
-          cp .github/workflows/src/extract_external_components_block.py .
+          #echo "copy block"
+          #cp .github/workflows/src/extract_external_components_block.py .
 
           echo "copy patch"
           cp .github/workflows/src/patch_full_yaml.sh .
 
-          if [ "${{ github.ref }}" == "refs/heads/dev" ]; then 
-            echo "dev branch run, take external components from dev branch"            
-            source patch_full_yaml.sh
-          else 
-            echo "not dev branch run, take external components from main" 
-          fi
+          source patch_full_yaml.sh
+
+          #if [ "${{ github.ref }}" == "refs/heads/dev" ]; then 
+          #  echo "dev branch run, take external components from dev branch"            
+          #  source patch_full_yaml.sh
+          #else 
+          #  echo "not dev branch run, take external components from main" 
+          #fi
 
           # print path used for external components
           echo "The following external components will be used for compilation: "
-          python extract_external_components_block.py
+          python .github/workflows/src/extract_external_components_block.py
 
       - name: Compile ESPHome binary
         run: |
