@@ -65,6 +65,8 @@ jobs:
 
             yq eval '.external_components[0].source = {"type": "local", "path": "../components"}' -i "examples/full_${LANG}.yaml"
             esphome compile "examples/full_${LANG}.yaml"
+
+            mkdir -p bin/
             mv examples/.esphome/build/hpsu-can/.pioenvs/hpsu-can/firmware.factory.bin "bin/hpsu-can-${LANG}.factory-gpios-tx05-rx06.bin"
           done
 
