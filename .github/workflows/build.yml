@@ -61,9 +61,6 @@ jobs:
           for yaml_file in examples/full_*.yaml; do
             LANG=$(basename "$yaml_file" .yaml | sed 's/full_//')
 
-            git reset --hard
-            git clean -xdf
-
             cp .github/workflows/resources/secrets.yaml examples/
 
             yq eval '.external_components[0].source = {"type": "local", "path": "../components"}' -i "examples/full_${LANG}.yaml"
