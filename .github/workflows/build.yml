@@ -61,10 +61,10 @@ jobs:
         run: |
           cp .github/workflows/resources/secrets.yaml examples/
 
-          echo "copy patch"
-          cp .github/workflows/src/patch_full_yaml.sh .
-
-          source patch_full_yaml.sh
+          sed -i 's/!/?/g' examples/full_de.yaml # make yaml pyyaml conform for cels
+          cels patch examples/full_de.yaml .github/workflows/resources/external_components_dev.yaml > full_patched.yaml
+          cat full_patched.yaml > examples/full_de.yaml
+          sed -i 's/?/!/g' examples/full_de.yaml # make yaml esphome conform
 
       - name: Compile ESPHome binary
         run: |
