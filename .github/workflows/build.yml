@@ -59,30 +59,12 @@ jobs:
 
       - name: Prepare full_de.yaml
         run: |
-          #echo "copy full_de.yaml"
-          #cp examples/full_de.yaml .
-
-          echo "copy secrets"
           cp .github/workflows/resources/secrets.yaml examples/
-
-          #echo "copy block"
-          #cp .github/workflows/src/extract_external_components_block.py .
 
           echo "copy patch"
           cp .github/workflows/src/patch_full_yaml.sh .
 
           source patch_full_yaml.sh
-
-          #if [ "${{ github.ref }}" == "refs/heads/dev" ]; then 
-          #  echo "dev branch run, take external components from dev branch"            
-          #  source patch_full_yaml.sh
-          #else 
-          #  echo "not dev branch run, take external components from main" 
-          #fi
-
-          # print path used for external components
-          echo "The following external components will be used for compilation: "
-          python .github/workflows/src/extract_external_components_block.py
 
       - name: Compile ESPHome binary
         run: |
@@ -90,10 +72,10 @@ jobs:
           esphome compile examples/full_de.yaml
 
           # rename file
-          mv .esphome/build/hpsu-can/.pioenvs/hpsu-can/firmware.factory.bin .esphome/build/hpsu-can/.pioenvs/hpsu-can/hpsu-can.factory-gpios-tx05-rx06.bin  
+          mv examples/.esphome/build/hpsu-can/.pioenvs/hpsu-can/firmware.factory.bin hpsu-can.factory-gpios-tx05-rx06.bin  
 
       - name: Archive compiled binary
         uses: actions/upload-artifact@v4
         with:
           name: compiled-binary
-          path: .esphome/build/hpsu-can/.pioenvs/hpsu-can/hpsu-can.factory-gpios-tx05-rx06.bin
+          path: hpsu-can.factory-gpios-tx05-rx06.bin
