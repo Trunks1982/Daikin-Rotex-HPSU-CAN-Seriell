@@ -53,6 +53,8 @@ jobs:
         run: |
           python3 -m pip install esphome
 
+          apt install yq
+
           # install latest version of cels by using wget, otherwise version 0.1.0 would be installed, which is buggy
           wget https://files.pythonhosted.org/packages/18/82/14819c1cc67c67e909abdbd9824eb756adccd47a1dee1c846f7300716646/cels-0.3.1.tar.gz
           python3 -m pip install cels-0.3.1.tar.gz
@@ -61,10 +63,12 @@ jobs:
         run: |
           cp .github/workflows/resources/secrets.yaml examples/
 
-          sed -i 's/!/?/g' examples/full_de.yaml # make yaml pyyaml conform for cels
-          cels patch examples/full_de.yaml .github/workflows/resources/external_components_dev.yaml > full_patched.yaml
-          cat full_patched.yaml > examples/full_de.yaml
-          sed -i 's/?/!/g' examples/full_de.yaml # make yaml esphome conform
+          #sed -i 's/!/?/g' examples/full_de.yaml # make yaml pyyaml conform for cels
+          #cels patch examples/full_de.yaml .github/workflows/resources/external_components_dev.yaml > full_patched.yaml
+          #cat full_patched.yaml > examples/full_de.yaml
+          #sed -i 's/?/!/g' examples/full_de.yaml # make yaml esphome conform
+
+          yq eval '.external_components[0].source = {"type": "local", "path": "../components"}' -i examples/full_de.yaml
 
       - name: Compile ESPHome binary
         run: |
