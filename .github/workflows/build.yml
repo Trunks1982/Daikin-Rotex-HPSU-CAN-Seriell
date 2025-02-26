@@ -57,10 +57,13 @@ jobs:
           wget https://files.pythonhosted.org/packages/18/82/14819c1cc67c67e909abdbd9824eb756adccd47a1dee1c846f7300716646/cels-0.3.1.tar.gz
           python3 -m pip install cels-0.3.1.tar.gz
 
-      - name: Prepare examples/full_de.yaml
+      - name: Prepare full_de.yaml
         run: |
+          #echo "copy full_de.yaml"
+          #cp examples/full_de.yaml .
+
           echo "copy secrets"
-          cp .github/workflows/resources/secrets.yaml .
+          cp .github/workflows/resources/secrets.yaml examples/
 
           echo "copy block"
           cp .github/workflows/src/extract_external_components_block.py .
