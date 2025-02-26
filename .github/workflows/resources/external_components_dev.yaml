@@ -1,4 +1,4 @@
 external_components:   # Use this block instead to use the current branch
   - source:
       type: local
-      path: components
+      path: ../components # Go up one level from the examples folder
