@@ -49,38 +49,23 @@ jobs:
           echo "WIFI_SSID=${{ secrets.WIFI_SSID }}" >> $GITHUB_ENV
           echo "WIFI_PASSWORD=${{ secrets.WIFI_PASSWORD }}" >> $GITHUB_ENV
           
-      - name: Install ESPHome and cels
+      - name: Install ESPHome and yq
         run: |
           python3 -m pip install esphome
-
-          #sudo apt install yq
 
           wget https://github.com/mikefarah/yq/releases/latest/download/yq_linux_amd64 -O /usr/local/bin/yq
           sudo chmod +x /usr/local/bin/yq
 
-          yq --version
-
-          # install latest version of cels by using wget, otherwise version 0.1.0 would be installed, which is buggy
-          wget https://files.pythonhosted.org/packages/18/82/14819c1cc67c67e909abdbd9824eb756adccd47a1dee1c846f7300716646/cels-0.3.1.tar.gz
-          python3 -m pip install cels-0.3.1.tar.gz
-
       - name: Prepare full_de.yaml
         run: |
           cp .github/workflows/resources/secrets.yaml examples/
-
-          #sed -i 's/!/?/g' examples/full_de.yaml # make yaml pyyaml conform for cels
-          #cels patch examples/full_de.yaml .github/workflows/resources/external_components_dev.yaml > full_patched.yaml
-          #cat full_patched.yaml > examples/full_de.yaml
-          #sed -i 's/?/!/g' examples/full_de.yaml # make yaml esphome conform
-
           yq eval '.external_components[0].source = {"type": "local", "path": "../components"}' -i examples/full_de.yaml
+
+          cat examples/full_de.yaml
 
       - name: Compile ESPHome binary
         run: |
-          # compile eshphome
           esphome compile examples/full_de.yaml
-
-          # rename file
           mv examples/.esphome/build/hpsu-can/.pioenvs/hpsu-can/firmware.factory.bin hpsu-can.factory-gpios-tx05-rx06.bin  
 
       - name: Archive compiled binary
