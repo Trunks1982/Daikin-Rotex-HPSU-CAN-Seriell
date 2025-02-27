@@ -41,12 +41,6 @@ jobs:
         uses: actions/setup-python@v5
         with:
           python-version: '3.x'
-
-      - name: Install GitHub CLI
-        run: |
-          gh extension install actions/gh-actions
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
   
       - name: Set environment variables 
         run: | 
@@ -77,12 +71,7 @@ jobs:
           done
 
       - name: Archive compiled binaries
-        run: |
-          for bin_file in bin/*.factory-gpios-tx05-rx06.bin; do
-            echo "Archiving $bin_file"
-            echo "::group::Uploading $bin_file"
-            gh run upload-artifact --name "$(basename "$bin_file")" --path "$bin_file"
-            echo "::endgroup::"
-          done
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        uses: actions/upload-artifact@v3
+        with:
+          name: compiled-binaries
+          path: bin/*.factory-gpios-tx05-rx06.bin
