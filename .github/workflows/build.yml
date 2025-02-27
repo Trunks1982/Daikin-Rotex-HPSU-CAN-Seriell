@@ -72,17 +72,9 @@ jobs:
 
       - name: Archive compiled binaries
         run: |
-          for bin_file in bin/*.factory-gpios-tx05-rx06.bin; do
-            echo "Archiving $bin_file"
-            # Archive each binary as its own artifact
-            echo "Uploading $bin_file"
-            # Upload each binary as a separate artifact with the same name
-            curl -X POST \
-              -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \
-              -H "Content-Type: application/json" \
-              --data '{
-                "name": "'"$(basename "$bin_file")"'",
-                "path": "'"$bin_file"'"
-              }' \
-              https://uploads.github.com/repos/${{ github.repository }}/actions/artifacts
-          done
+            for bin_file in bin/*.factory-gpios-tx05-rx06.bin; do
+              echo "Archiving $bin_file"
+              gh artifact upload "$(basename "$bin_file")" "$bin_file"
+            done
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
