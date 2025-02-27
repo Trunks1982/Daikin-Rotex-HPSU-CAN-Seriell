@@ -71,7 +71,7 @@ jobs:
           done
 
       - name: Archive compiled binaries
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: compiled-binaries
           path: bin/*.factory-gpios-tx05-rx06.bin
