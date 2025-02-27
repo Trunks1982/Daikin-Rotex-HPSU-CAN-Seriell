@@ -45,7 +45,9 @@ jobs:
       - name: Install GitHub CLI
         run: |
           gh extension install actions/gh-actions
-
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+  
       - name: Set environment variables 
         run: | 
           echo "API_ENCRYPTION_KEY=${{ secrets.API_ENCRYPTION_KEY }}" >> $GITHUB_ENV
