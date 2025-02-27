@@ -104,7 +104,7 @@ The installation is now complete, and you can connect the ESP32 to the Rotex/Dai
 ### Step 1: Preparation
 
 1. **Browser:** Use Google Chrome (Safari and Firefox are not supported).
-2. **Firmware:** Download the file [rotex.factory-tx05-rx06.bin](bin/rotex.factory-tx05-rx06.bin) from the bin folder.
+2. **Firmware:** Download the file `hpsu-can-en.factory-gpios-tx05-rx06.bin`. To do this, go to [Actions](https://github.com/Trunks1982/Daikin-Rotex-HPSU-CAN-Seriell/actions)  and click on the latest `Workflow Run` at the top. Then, under `Actions`, you will find the `compiled-binaries` archive, which contains the binary.
 
 ### Step 2: Flashing the ESP32
 
@@ -112,7 +112,7 @@ The installation is now complete, and you can connect the ESP32 to the Rotex/Dai
 2. Connect the ESP32 to your PC using a USB-C cable.
 3. Click "**Connect**" on the website and select the USB serial interface in the popup window.
 4. Then, click "**Install**".
-5. Select the downloaded file `rotex.factory-tx05-rx06.bin` and click "Install" again. The process will take about 2 minutes.
+5. Select the downloaded file `hpsu-can-en.factory-gpios-tx05-rx06.bin` and click "Install" again. The process will take about 2 minutes.
 
 ### Step 3: Configuring the ESP32 Wi-Fi Connection
 

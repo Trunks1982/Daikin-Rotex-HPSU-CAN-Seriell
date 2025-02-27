@@ -103,7 +103,7 @@ Die Installation ist nun abgeschlossen, und du kannst den ESP32 gemäß den Scha
 ### Schritt 1: Vorbereitung
 
 1. **Browser:** Verwende **Google Chrome** (Safari und Firefox werden nicht unterstützt).
-2. **Firmware:** Lade die Datei [rotex.factory-tx05-rx06.bin](bin/rotex.factory-tx05-rx06.bin) aus dem [bin](bin/)-Ordner herunter.
+2. **Firmware:** Lade die Datei `hpsu-can-de.factory-gpios-tx05-rx06.bin` herunter. Gehe dazu auf [Actions](https://github.com/Trunks1982/Daikin-Rotex-HPSU-CAN-Seriell/actions) und klicke oben auf den aktuellsten `Worflow Run`. Anschlissend findest du unten bei den `Actions` das Archiv `compiled-binaries`, das das Binary enthält.
 
 ### Schritt 2: ESP32 flashen
 
@@ -111,7 +111,7 @@ Die Installation ist nun abgeschlossen, und du kannst den ESP32 gemäß den Scha
 2. Verbinde den ESP32 per USB-C-Kabel mit deinem PC.
 3. Klicke auf der Webseite auf „**Connect**“ und wähle im erscheinenden Fenster die USB-Serial-Schnittstelle aus.
 4. Klicke anschließend auf „**Installieren**“.
-5. Wähle die heruntergeladene Datei `rotex.factory-tx05-rx06.bin` aus und klicke erneut auf „**Installieren**“. Der Vorgang dauert etwa 2 Minuten.
+5. Wähle die heruntergeladene Datei `hpsu-can-de.factory-gpios-tx05-rx06.bin` aus und klicke erneut auf „**Installieren**“. Der Vorgang dauert etwa 2 Minuten.
 
 ### Schritt 3: WLAN-Verbindung des ESP32 konfigurieren
 
