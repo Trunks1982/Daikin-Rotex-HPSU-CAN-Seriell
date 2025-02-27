@@ -47,6 +47,58 @@ Using Daikin-Rotex-HPSU-CAN can potentially damage your heating system. Use it a
 
 Please note that using Daikin-Rotex-HPSU-CAN may void your warranty and manufacturer support!
 
+<br><br>
+
+# Rotex/Daikin HPSU CAN Integration with ESPHome and Home Assistant
+
+This guide describes how to integrate your Rotex HPSU Compact via CAN bus using an ESP32 and ESPHome into Home Assistant without multiple flashing steps.
+
+### Requirements
+
+- Home Assistant with the ESPHome Add-on
+- ESP32-S3 microcontroller
+- USB-C cable for the initial connection
+
+## Step 1: Install the ESPHome Add-on in Home Assistant
+
+1. Open Home Assistant and navigate to **Settings > Add-ons > ESPHome**.
+2. Install the ESPHome Add-on and start it afterward.
+3. Open the ESPHome Add-on user interface.
+
+## Step 2: Configure the ESP32 in ESPHome and Initial Flashing
+
+1. In the ESPHome interface, click on **“New Device”**.
+2. Enter a name for the device (e.g., `Rotex_HPSU`) and select the **ESP32-S3** platform.
+3. Enter your Wi-Fi SSID and password so the ESP32 can connect to your home network later.
+4. Download the configuration file required for the initial flashing.
+5. **Connect the ESP32 to the computer running Home Assistant using a USB-C cable** (or any other computer on the network with ESPHome).
+6. If Home Assistant is installed in a virtual machine, ensure the USB ports are properly passed through.
+7. Select **“Plug into this computer”** and follow the instructions to flash the ESP32 directly from ESPHome.
+8. After successful flashing, the ESP32 will automatically connect to your Wi-Fi and appear in the ESPHome device list in Home Assistant.
+
+## Step 3: Update the Configuration in ESPHome and Flash Wirelessly
+
+1. In ESPHome, select the added device (e.g., `Rotex_HPSU`) and click **“Edit”** to open the configuration file.
+2. Replace the file’s content with the configuration from [examples/full_en.yaml](https://github.com/Trunks1982/Daikin-Rotex-HPSU-CAN-Seriell/blob/main/examples/full_en.yaml), optimized for your Rotex HPSU Compact.
+3. Save the changes and click **“Install”**. The configuration will be sent wirelessly to the ESP32, eliminating the need for another USB flash.
+
+## Step 4: Integrate the ESP32 into Home Assistant
+
+1. The ESP32 should automatically be detected as a new device in Home Assistant.
+2. Navigate to **Settings > Devices & Services** and verify if the device (e.g., `Rotex_HPSU`) has been added.
+3. The configured sensors and controls should now be available in Home Assistant and ready to use.
+
+
+
+## Conclusion
+
+The installation is now complete, and you can connect the ESP32 to the Rotex/Daikin system as shown in the wiring diagrams.
+
+
+**Note**: Additional sensors or controls can easily be added by including new entries in the ESPHome YAML configuration.
+
+<br><br>
+
 # Installation Guide (Standalone):
 
 ### Step 1: Preparation
@@ -77,55 +129,6 @@ Please note that using Daikin-Rotex-HPSU-CAN may void your warranty and manufact
 ## Conclusion
 
 The installation is now complete, and the system can be connected to the Rotex/Daikin unit following the **GPIO 5 and 6 pinout diagram (bin file)**.
-
-
-# Rotex/Daikin HPSU CAN Integration with ESPHome and Home Assistant
-
-This guide describes how to integrate your Rotex HPSU Compact via CAN bus using an ESP32 and ESPHome into Home Assistant without multiple flashing steps.
-
-### Requirements
-
-- Home Assistant with the ESPHome Add-on
-- ESP32-S3 microcontroller
-- USB-C cable for the initial connection
-
-## Step 1: Install the ESPHome Add-on in Home Assistant
-1. Open Home Assistant and navigate to **Settings > Add-ons > ESPHome**.
-2. Install the ESPHome Add-on and start it afterward.
-3. Open the ESPHome Add-on user interface.
-
-## Step 2: Configure the ESP32 in ESPHome and Initial Flashing
-
-1. In the ESPHome interface, click on **“New Device”**.
-2. Enter a name for the device (e.g., `Rotex_HPSU`) and select the **ESP32-S3** platform.
-3. Enter your Wi-Fi SSID and password so the ESP32 can connect to your home network later.
-4. Download the configuration file required for the initial flashing.
-5. **Connect the ESP32 to the computer running Home Assistant using a USB-C cable** (or any other computer on the network with ESPHome).
-6. If Home Assistant is installed in a virtual machine, ensure the USB ports are properly passed through.
-7. Select **“Plug into this computer”** and follow the instructions to flash the ESP32 directly from ESPHome.
-8. After successful flashing, the ESP32 will automatically connect to your Wi-Fi and appear in the ESPHome device list in Home Assistant.
-
-## Step 3: Update the Configuration in ESPHome and Flash Wirelessly
-
-1. In ESPHome, select the added device (e.g., `Rotex_HPSU`) and click **“Edit”** to open the configuration file.
-2. Replace the file’s content with the configuration from [examples/full.yaml](https://github.com/Columbo/Daikin-Rotex-HPSU-CAN/blob/main/examples/full.yaml), optimized for your Rotex HPSU Compact.
-3. Save the changes and click **“Install”**. The configuration will be sent wirelessly to the ESP32, eliminating the need for another USB flash.
-
-## Step 4: Integrate the ESP32 into Home Assistant
-
-1. The ESP32 should automatically be detected as a new device in Home Assistant.
-2. Navigate to **Settings > Devices & Services** and verify if the device (e.g., `Rotex_HPSU`) has been added.
-3. The configured sensors and controls should now be available in Home Assistant and ready to use.
-
-
-
-## Conclusion
-
-The installation is now complete, and you can connect the ESP32 to the Rotex/Daikin system as shown in the wiring diagrams.
-
-
-**Note**: Additional sensors or controls can easily be added by including new entries in the ESPHome YAML configuration.
-
 
 <br><br>
 
