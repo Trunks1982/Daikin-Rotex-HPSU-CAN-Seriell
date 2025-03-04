@@ -248,8 +248,8 @@ void DaikinRotexCanComponent::on_betriebsart(TEntity::TVariant const& current, T
                 m_entity_manager.sendSet(p_betriebs_modus->get_name(), 0x05); // Sommer
             } else if (std::get<std::string>(current) == STATE_HEATING && p_betriebs_modus->state != STATE_HEATING) {
                 m_entity_manager.sendSet(p_betriebs_modus->get_name(), 0x03); // Heizen
-            //} else if (std::get<std::string>(current) == STATE_STANDBY && p_betriebs_modus->state != STATE_HEATING) {
-            //    m_entity_manager.sendSet(p_betriebs_modus->get_name(), 0x03); // Heizen
+            } else if (std::get<std::string>(current) == STATE_STANDBY && std::get<std::string>(previous) == STATE_DEFROSTING && p_betriebs_modus->state == STATE_SUMMER) {
+                m_entity_manager.sendSet(p_betriebs_modus->get_name(), 0x03); // Heizen
             } else if (std::get<std::string>(current) == STATE_DHW_PRODUCTION && std::get<std::string>(previous) == STATE_DEFROSTING && p_betriebs_modus->state != STATE_HEATING) {
                 m_entity_manager.sendSet(p_betriebs_modus->get_name(), 0x03); // Heizen
             }
