@@ -225,18 +225,7 @@ bool DaikinRotexCanComponent::on_custom_select(std::string const& id, uint8_t va
         }
         m_optimized_defrosting.save(value);
         return true;
-    } /*else if (id == BETRIEBS_MODUS) {
-        CanSelect* p_betriebs_modus = m_entity_manager.get_select(BETRIEBS_MODUS);
-        CanSelect* p_optimized_defrosting = m_entity_manager.get_select(OPTIMIZED_DEFROSTING);
-        if (p_betriebs_modus != nullptr && p_betriebs_modus->state == STATE_SUMMER && p_optimized_defrosting != nullptr) {
-            ESP_LOGI(TAG, "on_custom_select(%s, %d) => set m_optimized_defrosting to false", id.c_str(), value);
-
-            p_optimized_defrosting->publish_select_key(0x0);
-            m_optimized_defrosting.save(0x0);
-
-            return false; // process sendSet(...)
-        }
-    }*/
+    }
     return false;
 }
 
