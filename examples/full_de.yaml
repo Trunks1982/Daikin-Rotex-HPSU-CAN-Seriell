@@ -380,7 +380,7 @@ daikin_rotex_can:
     temperature_antifreeze:
       name: T-Frostschutz
     building_insulation:
-      name: Gebäudedämumng
+      name: Gebäudedämmung
 #Estrich
 #Estrichprogramm
 
