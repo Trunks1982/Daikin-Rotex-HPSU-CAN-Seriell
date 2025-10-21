@@ -22,7 +22,7 @@ translations_en = {
     "saturday": "Saturday",
     "sunday": "Sunday",
     "mo_to_su": "Monday to Sunday",
-    "lowering": "Lowering",
+    "lowering": "Reduced",
     "summer": "Summer",
     "automatic_1": "Automatic 1",
     "automatic_2": "Automatic 2",
