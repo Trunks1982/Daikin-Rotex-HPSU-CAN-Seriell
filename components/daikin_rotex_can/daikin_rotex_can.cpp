@@ -412,17 +412,17 @@ void DaikinRotexCanComponent::dump() {
     ESP_LOGI(TAG, "------------------------------------------");
 
     for (auto index = 0; index < m_entity_manager.size(); ++index) {
-        TEntity* pEntity = m_entity_manager.get(index);
+        TEntity const* pEntity = m_entity_manager.get(index);
         if (pEntity != nullptr) {
-            if (CanSensor* pSensor = dynamic_cast<CanSensor*>(pEntity)) {
+            if (CanSensor const* pSensor = dynamic_cast<CanSensor const*>(pEntity)) {
                 ESP_LOGI(TAG, "%s: %f", pSensor->get_name().c_str(), pSensor->get_state());
-            } else if (CanBinarySensor* pBinarySensor = dynamic_cast<CanBinarySensor*>(pEntity)) {
+            } else if (CanBinarySensor const* pBinarySensor = dynamic_cast<CanBinarySensor const*>(pEntity)) {
                 ESP_LOGI(TAG, "%s: %d", pBinarySensor->get_name().c_str(), pBinarySensor->state);
-            } else if (CanNumber* pNumber = dynamic_cast<CanNumber*>(pEntity)) {
+            } else if (CanNumber const* pNumber = dynamic_cast<CanNumber const*>(pEntity)) {
                 ESP_LOGI(TAG, "%s: %f", pNumber->get_name().c_str(), pNumber->state);
-            } else if (CanTextSensor* pTextSensor = dynamic_cast<CanTextSensor*>(pEntity)) {
+            } else if (CanTextSensor const* pTextSensor = dynamic_cast<CanTextSensor const*>(pEntity)) {
                 ESP_LOGI(TAG, "%s: %s", pTextSensor->get_name().c_str(), pTextSensor->get_state().c_str());
-            } else if (CanSelect* pSelect = dynamic_cast<CanSelect*>(pEntity)) {
+            } else if (CanSelect const* pSelect = dynamic_cast<CanSelect const*>(pEntity)) {
                 const std::string option = pSelect->current_option();
                 ESP_LOGI(TAG, "%s: %s", pSelect->get_name().c_str(), option.c_str());
             }
