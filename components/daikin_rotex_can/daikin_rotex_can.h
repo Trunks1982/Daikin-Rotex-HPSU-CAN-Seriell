@@ -96,9 +96,12 @@ private:
     public:
         MyAction(DaikinRotexCanComponent* pParent): m_pParent(pParent) {}
     protected:
-        virtual void play(std::vector<uint8_t> data, uint32_t can_id, bool remote_transmission_request) override {
+        void play(const std::vector<uint8_t> &data, const uint32_t &can_id,
+                  const bool &remote_transmission_request) override
+        {
             m_pParent->handle(can_id, data);
         }
+
     private:
         DaikinRotexCanComponent* m_pParent;
     };
