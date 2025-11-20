@@ -165,7 +165,8 @@ void DaikinRotexCanComponent::on_post_handle(TEntity* pEntity, TEntity::TVariant
         CanSelect* p_optimized_defrosting = m_entity_manager.get_select(OPTIMIZED_DEFROSTING);
         CanSelect* p_temperature_antifreeze = m_entity_manager.get_select(TEMPERATURE_ANTIFREEZE);
         if (p_optimized_defrosting != nullptr && p_temperature_antifreeze != nullptr) {
-            if (p_temperature_antifreeze->state != Translation::T_OFF && m_optimized_defrosting.value() != 0x0) {
+            const std::string antifreeze_option = p_temperature_antifreeze->current_option();
+            if (antifreeze_option != Translation::T_OFF && m_optimized_defrosting.value() != 0x0) {
                 p_optimized_defrosting->publish_select_key(0x0);
                 m_optimized_defrosting.save(0x0);
                 Utils::log(TAG, "set %s: %d", OPTIMIZED_DEFROSTING.c_str(), m_optimized_defrosting.value());
@@ -290,7 +291,7 @@ void DaikinRotexCanComponent::on_betriebsart(TEntity::TVariant const& current, T
         if (std::holds_alternative<std::string>(current)) {
             const auto art_current = std::get<std::string>(current);
             const auto art_previous = std::get<std::string>(previous);
-            const auto modus = p_betriebs_modus->state;
+            const std::string modus = p_betriebs_modus->current_option();
             std::string new_mode = modus;
 
             const bool modus_is_heating = is_modus_heating(modus);
@@ -383,7 +384,10 @@ void DaikinRotexCanComponent::dhw_run() {
         if (CanNumber const* pNumber = dynamic_cast<CanNumber const*>(pEntity)) {
             temp2 = pNumber->state;
         } else if (CanSelect const* pSelect = dynamic_cast<CanSelect const*>(pEntity)) {
-            temp2 = pSelect->getKey(pSelect->state) / pEntity->get_config().divider;
+            const std::string option = pSelect->current_option();
+            if (!option.empty()) {
+                temp2 = pSelect->getKey(option) / pEntity->get_config().divider;
+            }
         }
 
         if (temp2 > 0) {
@@ -408,19 +412,19 @@ void DaikinRotexCanComponent::dump() {
     ESP_LOGI(TAG, "------------------------------------------");
 
     for (auto index = 0; index < m_entity_manager.size(); ++index) {
-        TEntity const* pEntity = m_entity_manager.get(index);
+        TEntity* pEntity = m_entity_manager.get(index);
         if (pEntity != nullptr) {
-            EntityBase* pEntityBase = pEntity->get_entity_base();
-            if (CanSensor* pSensor = dynamic_cast<CanSensor*>(pEntityBase)) {
+            if (CanSensor* pSensor = dynamic_cast<CanSensor*>(pEntity)) {
                 ESP_LOGI(TAG, "%s: %f", pSensor->get_name().c_str(), pSensor->get_state());
-            } else if (CanBinarySensor* pBinarySensor = dynamic_cast<CanBinarySensor*>(pEntityBase)) {
+            } else if (CanBinarySensor* pBinarySensor = dynamic_cast<CanBinarySensor*>(pEntity)) {
                 ESP_LOGI(TAG, "%s: %d", pBinarySensor->get_name().c_str(), pBinarySensor->state);
-            } else if (CanNumber* pNumber = dynamic_cast<CanNumber*>(pEntityBase)) {
+            } else if (CanNumber* pNumber = dynamic_cast<CanNumber*>(pEntity)) {
                 ESP_LOGI(TAG, "%s: %f", pNumber->get_name().c_str(), pNumber->state);
-            } else if (CanTextSensor* pTextSensor = dynamic_cast<CanTextSensor*>(pEntityBase)) {
+            } else if (CanTextSensor* pTextSensor = dynamic_cast<CanTextSensor*>(pEntity)) {
                 ESP_LOGI(TAG, "%s: %s", pTextSensor->get_name().c_str(), pTextSensor->get_state().c_str());
-            } else if (CanSelect* pSelect = dynamic_cast<CanSelect*>(pEntityBase)) {
-                ESP_LOGI(TAG, "%s: %s", pSelect->get_name().c_str(), pSelect->state.c_str());
+            } else if (CanSelect* pSelect = dynamic_cast<CanSelect*>(pEntity)) {
+                const std::string option = pSelect->current_option();
+                ESP_LOGI(TAG, "%s: %s", pSelect->get_name().c_str(), option.c_str());
             }
         } else {
             ESP_LOGE(TAG, "Entity with index<%d> not found!", index);

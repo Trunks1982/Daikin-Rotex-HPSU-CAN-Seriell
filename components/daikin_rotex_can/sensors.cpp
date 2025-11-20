@@ -115,7 +115,7 @@ bool CanNumber::handleValue(uint16_t value, TEntity::TVariant& current, TVariant
 
 void CanSelect::control(const std::string &value) {
     this->publish_state(value);
-    const uint16_t key = getKey(state);
+    const uint16_t key = getKey(value);
     const bool handled = m_custom_select_lambda(get_id(), key);
     if (!handled) {
         sendSet(m_pCanbus, key);
@@ -142,7 +142,7 @@ void CanSelect::publish_select_key(uint16_t key) {
 }
 
 bool CanSelect::handleValue(uint16_t value, TEntity::TVariant& current, TVariant& previous) {
-    previous = state;
+    previous = this->current_option();
     current = findNextByKey(value, Utils::format("INVALID<%f>", value));
     publish_state(std::get<std::string>(current));
     return true;
