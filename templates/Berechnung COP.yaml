@@ -9,12 +9,12 @@ sensor:
           {% set stromverbrauch = states('sensor.wp_channel_a_power') | float(0) / 1000 %}
           {% set kompressor_status = states('sensor.rotex_status_kompressor') %}
           
-          {% if kompressor_status == 'An' and stromverbrauch > 0 %}
-            {% if thermische_leistung >= 0 %}
-              {{ (thermische_leistung / stromverbrauch) | round(2) }}
-            {% else %}
-              {{ (-1 * thermische_leistung / stromverbrauch) | round(2) }}
+          {% if kompressor_status == 'An' and states('sensor.hpsu_can_flow_rate')|int >300 and stromverbrauch > 0.15 %} # 0.15 Ajust to any resonable power grather than 0
+            {% set cop = (thermische_leistung / stromverbrauch) | abs | round(2) %} # abs conversts negative to positive
+            {% if cop > 10 %} # set cop =0 if cop is still overshooted
+              {%set cop = 0 %}
             {% endif %}
+            {{ cop }}
           {% else %}
             0  # Wenn der Kompressor nicht läuft, wird COP auf 0 gesetzt
           {% endif %}
