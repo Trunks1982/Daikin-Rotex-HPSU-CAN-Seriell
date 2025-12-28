@@ -26,7 +26,7 @@ translations_fr = {
     "summer": "Été",
     "automatic_1": "Automatique 1",
     "automatic_2": "Automatique 2",
-    "weather_dependent": "En fonction de la météo",		
+    "weather_dependent": "En fonction de la température",		
     "sg_mode_1": "Mode SG 1",
     "sg_mode_2": "Mode SG 2",
     "fixed": "Fixe",
