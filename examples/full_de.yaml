@@ -142,13 +142,13 @@ daikin_rotex_can:
     bypass_valve:
       name: BPV
     tv:
-      name: Heizkreis Vorlauf (TV)
+      name: TV
       update_interval: 5
     tvbh:
-      name: Vorlauftemperatur Heizung (TVBH)
+      name: TVBH
       update_interval: 5
     tr:
-      name: Ruecklauftemperatur Heizung
+      name: TR
       update_interval: 5
     tdhw1:
       name: Warmwassertemperatur

@@ -142,13 +142,13 @@ daikin_rotex_can:
     bypass_valve:
       name: Bypass Valve
     tv:
-      name: Flow Temperature (TV)
+      name: TV
       update_interval: 5
     tvbh:
-      name: Flow Temperature Heating (TVBH)
+      name: TVBH
       update_interval: 5
     tr:
-      name: Return Temperature Heating
+      name: TR
       update_interval: 5
     tdhw1:
       name: Hot Water Temperature

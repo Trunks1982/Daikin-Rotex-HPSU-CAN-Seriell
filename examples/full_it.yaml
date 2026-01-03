@@ -142,13 +142,13 @@ daikin_rotex_can:
     bypass_valve:
       name: Valvola di Bypass
     tv:
-      name: Temperatura di mandata (TV)
+      name: TV
       update_interval: 5
     tvbh:
-      name: Temperatura Mandata Riscaldamento (TVBH)
+      name: TVBH
       update_interval: 5
     tr:
-      name: Temperatura Ritorno Riscaldamento
+      name: TR
       update_interval: 5
     tdhw1:
       name: Temperatura Acqua Calda
