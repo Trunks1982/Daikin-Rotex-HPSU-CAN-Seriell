@@ -9,6 +9,15 @@ on:
       - '.github/**'
       - 'examples/full_*.yaml'
       - 'components/**'
+
+  pull_request:
+    branches:
+      - main
+      - dev
+    paths:
+      - '.github/**'
+      - 'examples/full_*.yaml'
+      - 'components/**'
   workflow_dispatch:
 
 jobs:
