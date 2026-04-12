@@ -1,0 +1,491 @@
+esphome:
+    name: hpsu-can
+    friendly_name: HPSU.CAN
+
+esp32:
+  board: esp32-s3-devkitc-1
+  framework:
+    type: arduino
+
+external_components:
+  - source:
+      type: git
+      url: https://github.com/Trunks1982/Daikin-Rotex-HPSU-CAN.git
+      ref: main   # Remplacer “main” par “dev” si tu veux la branche de développement
+    refresh: 0s
+
+logger:
+  level: INFO
+
+api:
+  encryption:
+    key: !secret api_encryption_key
+
+ota:
+  platform: esphome
+  password: !secret ota_password
+
+web_server:
+  version: 3
+
+wifi:
+  ssid: !secret wifi_ssid
+  password: !secret wifi_password
+  min_auth_mode: WPA2
+  power_save_mode: none
+
+  ap:
+    ssid: DaikinRotex Fallback Hotspot
+    password: H3jGqANSa7aL
+
+captive_portal:
+
+time:
+  - platform: homeassistant
+
+debug:
+  update_interval: 5s
+
+sensor:
+  - platform: uptime
+    type: seconds
+    name: Uptime Seconds
+  - platform: uptime
+    type: timestamp
+    name: Uptime Timestamp
+  - platform: debug
+    free:
+      name: "Heap Free"
+    block:
+      name: "Heap Max Block"
+  - platform: wifi_signal
+    name: "WiFi Signal Sensor"
+    update_interval: 60s
+
+button:
+  - platform: restart
+    name: "Rotex ESP Restart"
+#switch:
+#  - platform: gpio
+#    name: Smart Grid
+#    pin:
+#      number: GPIO06
+#      inverted: true
+
+#  - platform: gpio
+#    name: EVU
+#    pin:
+#      number: GPIO05
+#      inverted: true
+
+text_sensor:
+  - platform: debug
+    device:
+      name: "Device Info"
+    reset_reason:
+      name: "Reset Reason"
+  - platform: wifi_info
+    ip_address:
+      name: ESP IP Address
+    ssid:
+      name: ESP Connected SSID
+
+canbus:
+  - platform: esp32_can
+    id: can_bus
+    can_id: 0x680
+    tx_pin: GPIO5
+    rx_pin: GPIO6
+    bit_rate: 20kbps
+
+daikin_rotex_can:
+  id: rotext_hpsu
+  language: fr
+  canbus_id: can_bus
+  update_interval: 30s
+
+  # Certains capteurs Tv, TvBH, ou Tr peuvent avoir des dérives.
+  # Ces dérives peuvent être compensées afin d'améliorer la détection de vannes 3-voies défectueuses.
+  # Par exemple, si le capteur Tv montre une température 1.5°C trop haute, le Tv offset l'abaissera de -1.5.
+  # Idem pour TvBH et Tr.
+  #tv_offset: -1.0
+  #tvbh_offset: -1.0
+  #tr_offset: -1.0
+
+  #max_spread_tvbh_tv: 0.5  # Legt Tv-TVBH-Schwellwert fest, bei dem die DHW-Ventil-Fehler-Erkennung auslösen soll
+  #max_spread_tvbh_tr: 0.5  # Legt TVBH-Tr-Schwellwert fest, bei dem die BPV-Ventil-Fehler-Erkennung auslösen soll
+
+  log_filter:
+    name: Log Filter
+  custom_request:
+    name: Custom Request
+  dump:
+    name: Dump Senors
+  project_git_hash:
+    name: Project Git Hash
+  entities:
+
+# Info
+
+    error_code:
+      name: Code d'erreur
+
+    mode_of_operating:
+      name: Mode de Fonctionnement
+    ext:
+      name: Ext
+# RT
+    circulation_pump:
+      name: Pompe Circulation
+# EHS
+    bypass_valve:
+      name: Vanne Bypass
+    tv:
+      name: TV
+      update_interval: 5s
+    tvbh:
+      name: TVBH
+      update_interval: 5s
+    tr:
+      name: TR
+      update_interval: 5s
+    tdhw1:
+      name: Température eau chaude
+    tdhw2:
+      name: Température eau chaude 2
+    temperature_outside:
+      name: Température extérieure
+# V
+# TVBH2
+# TR2
+# Tdhw2
+    tliq:
+      name: Température Conduite Liquide
+    ta2:
+      name: TA2
+# quiet
+
+# Overview
+    water_pressure:
+      name: Pression d'eau
+    t_hs:
+      name: T-WE
+# T-WE Soll
+    t_ext:
+      name: T-Extérieure
+# T-WW
+# T-WW Soll
+# T-Rücklauf
+    flow_rate:
+      name: Débit
+      update_interval: 10s
+# T-HK
+# T-HK Soll
+    status_kesselpumpe:
+      name: Statut Pompe Circulation
+    status_kompressor:
+      name: Statut Compresseur
+    runtime_compressor:
+      name: Temps Fonctionnement Compresseur
+    runtime_pump:
+      name: Temps Fonctionnement Pompe
+    dhw_mixer_position:
+      name: Position Mélangeur ECS
+    qboh:
+      name: EHS pour ECS
+    ehs_for_ch:
+      name: EHS pour CH
+    energy_cooling:
+      name: Energie Refroidissement
+    qch:
+      name: Energie Chauffage
+    total_energy_produced:
+      name: Total Energie Produite
+    qdhw:
+      name: Energie pour ECS
+    total_electrical_energy:
+      name: Total Energie Electrique
+#WE Typ
+#SwNr B1/U1
+#SwNr Regler
+#SwNr RTXRT
+
+# ESP custom sensors
+    energy_saving_mode:
+      name: Mode Eco
+
+# Betriebsart
+    operating_mode:
+      name: Mode de Fonctionnement
+      update_interval: 5s
+
+# Room Set Day
+    target_room1_temperature:
+      name: Température Consigne Pièce 1
+      type: select
+    target_room2_temperature:
+      name: Température Consigne Pièce 2
+      type: select
+    target_room3_temperature:
+      name: Température Consigne Pièce 3
+      type: select
+
+# Room Set Night
+  # T-Absenkung
+  # T-Abwesend
+
+# WW Solltemp
+    target_hot_water_temperature_1:
+      name: Consigne ECS
+      type: select
+    target_hot_water_temperature_2:
+      name: Consigne ECS 2
+      type: select
+    target_hot_water_temperature_3:
+      name: Consigne ECS 3
+      type: select
+
+# T-WWSoll 2
+# T-WWSoll 3
+
+# WW Install
+    dhw_run:
+      name: Production ECS
+    1_dhw:
+      name: 1 x Production ECS
+      #type: switch
+    hp_hyst_tdhw:
+      name: HP Hyst TDHW
+    delay_time_for_backup_heating:
+      name: Attente pour Corps de Chauffe
+
+# Configuration
+
+# Configuration -> Installation
+# Sprache
+# Datum
+    system_date_day:
+      name: Jour Date Système
+      internal: true
+    system_date_month:
+      name: Mois Date Système
+      internal: true
+    system_date_year:
+      name: Année Date Système
+      internal: true
+    system_date:
+      name: Date Système
+# Uhrzeit
+    system_time_hour:
+      name: Heure Système
+      internal: true
+    system_time_minute:
+      name: Minute Système
+      internal: true
+    system_time_second:
+      name: Seconde Système
+      internal: true
+      update_interval: 1s
+    system_time:         # Cette entité fait grossir rapidement la base de données HA ! Veuillez l'ajouter dans HA -> recorder -> exclude -> entities !
+      name: Heure Système
+
+#...
+    outdoor_unit:
+      name: Unité Externe
+    indoor_unit:
+      name: Unité Interne
+    function_ehs:
+      name: Fonction EHS
+    ch_support:
+      name: Support CH
+      #type: switch
+    bivalence_function:
+      name: Fonction Bivalence
+    smart_grid:
+      name: Smart Grid
+      #type: switch
+    sg_mode:
+      name: Mode SG
+# HT/NT Funktion
+# HT/NT Anschluss
+# Raumthermostat
+# Interlinkfunktion
+# Konfig MFR 1
+# Entlüftungsfunktion
+# PWM Konfig
+    circulation_pump_min:
+      name: Pompe de Circulation Min
+    circulation_pump_max:
+      name: Pompe de Circulation Max
+# ...
+# Sensor Konfig
+    external_temp_sensor:
+      name: Configuration Sonde Extérieure
+    # SKonfig T-WW
+    # SKonfig Druck
+# AF Anspassung
+# Terminal Adresse
+# Konfig System
+
+# Configuration -> System Configuration
+
+    power_dhw:
+      name: Puissance ECS
+      #type: select
+    power_ehs_1:
+      name: Puissance EHS Niveau 1
+    power_ehs_2:
+      name: Puissance EHS Niveau 2
+    power_biv:
+      name: Puissance BIV
+    tdiff_dhw_ch:
+      name: TDiff ECS CH
+    max_heating_temperature:
+      name: Température Max Chauffage
+    bivalence_temperature:
+      name: Température de Bivalence
+    quiet:
+      name: Mode Silencieux
+#Sonderfunkt Schaltk
+#Wartezeit Sonderfunkt
+    t_dhw_1_min:
+      name: Seuil Activation TDHW
+    delta_temp_ch:
+      name: Ecart de Température CH
+    delta_temp_dhw:
+      name: Ecart de Température ECS
+#VerzZeitPumpe                # service
+    flow_rate_min:
+      name: Débit Min
+    flow_rate_setpoint:
+      name: Consigne Débit
+    flow_rate_calc:
+      name: Débit Calculé
+    flow_rate_hyst:
+      name: Hystérèse Débit
+    supply_temperature_adjustment_heating:
+      name: Correction Température Départ Chauffage
+    supply_temperature_adjustment_cooling:
+      name: Correction Température Départ Refroidissement
+    min_pressure:
+      name: Pression Min
+    max_pressure:
+      name: Pression Max
+    set_pressure:
+      name: Consigne de Pression
+    max_pressure_drop:
+      name: Perte de Pression Max
+#Relaistest
+
+# Konfiguration -> HZK Konfig
+    hk_function:
+      name: Fonction Circuit Chauffage
+    temperature_antifreeze:
+      name: Température Antigel
+    building_insulation:
+      name: Isolation du Bâtiment
+#Estrich
+#Estrichprogramm
+
+# Konfiguration -> HZK Konfig -> Kühlen
+    start_t_out_cooling:
+      name: Démarrage T-Ext Refroidissement
+    max_t_out_cooling:
+      name: T-Ext Max Refroidissement
+    t_flow_cooling_start:
+      name: Température Départ Début Refroidissement
+    t_flow_cooling_max:
+      name: Température Départ Max Refroidissement
+    min_t_flow_cooling:
+      name: Température Départ Min Refroidissement
+    t_flow_cooling:
+      name: Température Départ Refroidissement
+    t_h_c_switch:
+      name: Temp Commutation Chauffage/Refroidissement
+    cooling_setpoint_adj:
+      name: Correction Consigne Refroidissement
+
+# Konfiguration -> HZK Konfig -> Heizen
+
+    heating_limit_day:
+      name: Limite Chauffage Jour
+    heating_limit_night:
+      name: Limite Chauffage Nuit
+    heating_curve:
+      name: Courbe de Chauffe
+#Raumeinfluss
+#RF Anpassung
+    flow_temperature_day:
+      name: Température Départ Jour
+    flow_temperature_night:
+      name: Température Départ Nuit
+    max_target_flow_temp:
+      name: Température Départ Max
+    min_target_flow_temp:
+      name: Température Départ Min
+    heating_curve_adaptation:
+      name: Ajustement Courbe de Chauffe
+      #type: switch
+
+# Konfiguration -> HZK Konfig -> Kühlen
+
+#StartKühlen A-Temp
+#MaxKühlen A-Temp
+#VL-SollStartKühlen
+#VL-SollMaxKühlen
+#MinVL-SollKühlen
+#T-VLKühlen
+#T_H/K Umschaltung
+#KühlsollwertKorr
+
+#Konfiguration -> WW Konfig
+
+    circulation_with_dhw_program:
+      name: Circulation avec Programme ECS
+      #type: switch
+    circulation_interval_on:
+      name: Intervalle Circulation — Marche
+    circulation_interval_off:
+      name: Intervalle Circulation — Arrêt
+    antileg_day:
+      name: Jour Anti-Légionellose
+#AntilegZeit
+    antileg_temp:
+      name: Température Anti-Légionellose
+    max_dhw_loading:
+      name: Durée Max Chargement ECS
+    dhw_off_time:
+      name: Durée Blocage ECS
+
+# Others
+
+    electric_heater:
+      name: Résistance Électrique - Pour Pompes Après Octobre 2018
+    thermal_power:
+      name: Puissance Thermique
+    optimized_defrosting:
+      name: Dégivrage Optimisé
+      #type: switch
+    temperature_spread:
+      name: Écart de Température
+    tv_tvbh_delta:
+      name: Delta Tv-TVBH
+    tvbh_tr_delta:
+      name: Delta TVBH-Tr
+    vorlauf_soll_tv_delta:
+      name: Delta Consigne Départ-Tv
+    room_therm:
+      name: Thermostat D'Ambiance
+      #type: switch
+
+# Rocon U1
+
+    #t_room:
+    #  name: Actual Room Temperature
+
+# To be categorized
+
+    target_supply_temperature:
+      name: Température De Départ Cible
+    supply_setpoint_regulated:
+      name: Consigne Départ Régulée
