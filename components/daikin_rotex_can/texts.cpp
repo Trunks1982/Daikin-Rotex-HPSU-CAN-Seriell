@@ -22,5 +22,5 @@ void CustomRequestText::control(const std::string &value) {
     this->parent_->custom_request(value);
 }
 
-}  // namespace seeed_mr24hpc1
+}  // namespace daikin_rotex_can
 }  // namespace esphome
