@@ -2,7 +2,6 @@
 #include "esphome/core/log.h"
 #include "esphome/core/hal.h"
 #include <iomanip>
-#include <regex>
 
 namespace esphome {
 namespace daikin_rotex_can {
@@ -75,8 +74,31 @@ TMessage Utils::str_to_bytes(const std::string& str) {
 TMessage Utils::str_to_bytes_array8(const std::string& str) {
     TMessage byte_array{};
 
-    std::string cleaned_str = std::regex_replace(str, std::regex("[^0-9A-Fa-f\\s]+"), "");
-    cleaned_str = std::regex_replace(cleaned_str, std::regex("\\s+"), " ");
+    // Remove non-hex, non-whitespace characters
+    std::string cleaned_str;
+    for (char c : str) {
+        if (std::isxdigit(static_cast<unsigned char>(c)) || std::isspace(static_cast<unsigned char>(c))) {
+            cleaned_str += c;
+        }
+    }
+    // Collapse consecutive whitespace into single spaces and trim
+    std::string collapsed;
+    bool last_was_space = true;
+    for (char c : cleaned_str) {
+        if (std::isspace(static_cast<unsigned char>(c))) {
+            if (!last_was_space) {
+                collapsed += ' ';
+                last_was_space = true;
+            }
+        } else {
+            collapsed += c;
+            last_was_space = false;
+        }
+    }
+    if (!collapsed.empty() && collapsed.back() == ' ') {
+        collapsed.pop_back();
+    }
+    cleaned_str = collapsed;
 
     std::stringstream ss(cleaned_str);
     std::string byte_str;

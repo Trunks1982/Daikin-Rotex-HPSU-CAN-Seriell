@@ -8,7 +8,6 @@
 #include <string>
 #include <vector>
 #include <limits>
-#include <regex>
 
 namespace esphome {
 namespace daikin_rotex_can {
@@ -354,18 +353,36 @@ void DaikinRotexCanComponent::on_betriebsmodus(TEntity::TVariant const& current,
     }
 }
 
+// Validates a string of 1-7 hex bytes like "0x31 0xAB 0x0F" or "31 AB 0F"
+static bool is_valid_hex_bytes(const std::string& s) {
+    if (s.empty()) return false;
+    std::istringstream iss(s);
+    std::string token;
+    int count = 0;
+    while (iss >> token) {
+        if (++count > 7) return false;
+        size_t offset = 0;
+        if (token.size() >= 2 && token[0] == '0' && (token[1] == 'x' || token[1] == 'X')) {
+            offset = 2;
+        }
+        if (token.size() - offset != 2) return false;
+        for (size_t i = offset; i < token.size(); ++i) {
+            if (!std::isxdigit(static_cast<unsigned char>(token[i]))) return false;
+        }
+    }
+    return count >= 1;
+}
+
 ///////////////// Texts /////////////////
 void DaikinRotexCanComponent::custom_request(std::string const& value) {
-    std::regex pattern(R"(^((?:0x[0-9A-Fa-f]{2}|[0-9A-Fa-f]{2})(?:\s(?:0x[0-9A-Fa-f]{2}|[0-9A-Fa-f]{2})){0,6})$)");
-    std::smatch match;
-    if (std::regex_match(value, match, pattern)) {
+    if (is_valid_hex_bytes(value)) {
         uint16_t can_id = 0x680;
         const bool use_extended_id = false;
 
-        const TMessage message = Utils::str_to_bytes(match[1].str());
+        const TMessage message = Utils::str_to_bytes(value);
 
         Utils::log(TAG, "custom_request() can_id<%s> data<%s> str<%s>",
-            Utils::to_hex(can_id).c_str(), Utils::to_hex(message).c_str(), match[1].str().c_str());
+            Utils::to_hex(can_id).c_str(), Utils::to_hex(message).c_str(), value.c_str());
 
         esphome::esp32_can::ESP32Can* pCanbus = m_entity_manager.getCanbus();
         pCanbus->send_data(can_id, use_extended_id, { message.begin(), message.end() });
