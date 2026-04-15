@@ -23,9 +23,10 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
-
     steps:
+      # Only enforce secrets on trusted events (not pull_request)
       - name: Check for required secrets
+        if: ${{ github.event_name != 'pull_request' }}
         run: |
           if [ -z "${{ secrets.API_ENCRYPTION_KEY }}" ]; then
             echo "Error: API_ENCRYPTION_KEY secret is not set" >&2
@@ -50,14 +51,14 @@ jobs:
         uses: actions/setup-python@v6
         with:
           python-version: '3.13'
-  
-      - name: Set environment variables 
-        run: | 
-          echo "API_ENCRYPTION_KEY=${{ secrets.API_ENCRYPTION_KEY }}" >> $GITHUB_ENV
-          echo "OTA_PASSWORD=${{ secrets.OTA_PASSWORD }}" >> $GITHUB_ENV
-          echo "WIFI_SSID=${{ secrets.WIFI_SSID }}" >> $GITHUB_ENV
-          echo "WIFI_PASSWORD=${{ secrets.WIFI_PASSWORD }}" >> $GITHUB_ENV
-          
+
+      - name: Set environment variables
+        run: |
+          echo "API_ENCRYPTION_KEY=${{ secrets.API_ENCRYPTION_KEY || '00000000000000000000000000000000' }}" >> $GITHUB_ENV
+          echo "OTA_PASSWORD=${{ secrets.OTA_PASSWORD || 'dummy_ota_password' }}" >> $GITHUB_ENV
+          echo "WIFI_SSID=${{ secrets.WIFI_SSID || 'dummy_ssid' }}" >> $GITHUB_ENV
+          echo "WIFI_PASSWORD=${{ secrets.WIFI_PASSWORD || 'dummy_wifi_password' }}" >> $GITHUB_ENV
+
       - name: Install ESPHome and yq
         run: |
           python3 -m pip install esphome
