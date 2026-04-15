@@ -8,7 +8,6 @@
 #include <string>
 #include <vector>
 #include <limits>
-#include <cctype>
 
 namespace esphome {
 namespace daikin_rotex_can {
