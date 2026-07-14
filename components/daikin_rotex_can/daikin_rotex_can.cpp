@@ -567,31 +567,33 @@ std::string DaikinRotexCanComponent::recalculate_state(EntityBase* pEntity, std:
         const float tr_state = tr->state + m_tv_tvbh_tr_offset.tr;
 
         if (flow_rate != nullptr && dhw_mixer_position != nullptr) {
-            const bool is_error_state = flow_rate->state > 600.0f && dhw_mixer_position->state == 0.0f && tvbh_state > (tv_state + m_max_spread.tvbh_tv);
+            auto tv_tvbh_delta = tvbh_state - tv_state;
+            const bool is_error_state = flow_rate->state > 600.0f && dhw_mixer_position->state == 0.0f && std::abs(tv_tvbh_delta) > m_max_spread.tvbh_tv;
 
-            Utils::log(ERROR_CODE_TAG, "tv: %f, tvbh: %f, TvBH-Tv: %f, dhw: %f, flow: %f, dhw_ts: %d, millis: %d",
-                tv_state, tvbh_state, m_max_spread.tvbh_tv, dhw_mixer_position->state, flow_rate->state,
+            Utils::log(ERROR_CODE_TAG, "tv: %f, tvbh: %f, tv-tvbh-delta: %f, max-delta: %f, dhw: %f, flow: %f, dhw_ts: %d, millis: %d",
+                tv_state, tvbh_state, tv_tvbh_delta, m_max_spread.tvbh_tv, dhw_mixer_position->state, flow_rate->state,
                     m_mixer_error_detection.get_error_detection_timestamp(),
                     esphome::millis());
 
             if (m_mixer_error_detection.handle_error_detection(is_error_state)) {
-                ESP_LOGE(ERROR_CODE_TAG, "3UV DHW defekt (1) => tvbh: %f, tv: %f, max_spread: %f, bpv: %f, flow_rate: %f",
-                    tvbh_state, tv_state, m_max_spread.tvbh_tv, dhw_mixer_position->state, flow_rate->state);
+                ESP_LOGE(ERROR_CODE_TAG, "3UV DHW defekt (1) => tv: %f, tvbh: %f, delta: %f, max-delta: %f, bpv: %f, flow_rate: %f",
+                    tv_state, tvbh_state, tv_tvbh_delta, m_max_spread.tvbh_tv, dhw_mixer_position->state, flow_rate->state);
                 return new_state + "|3UV DHW " + Translation::T_DEFECT;
             }
         }
 
         if (flow_rate != nullptr && bpv != nullptr) {
-            const bool is_error_state = flow_rate->state > 600.0f && bpv->state == 100.0f && tvbh_state > (tr_state + m_max_spread.tvbh_tr);
+            const float tvbh_tr_delta = tvbh_state - tr_state;
+            const bool is_error_state = flow_rate->state > 600.0f && bpv->state == 100.0f && std::abs(tvbh_tr_delta) > m_max_spread.tvbh_tr;
 
-            Utils::log(ERROR_CODE_TAG, "tvbh: %f, tr: %f, Tr-TvBH: %f, bpv: %f, flow: %f, bpv_ts: %d, millis: %d",
-                tvbh_state, tr_state, m_max_spread.tvbh_tr, bpv->state, flow_rate->state,
+            Utils::log(ERROR_CODE_TAG, "tvbh: %f, tr: %f, tvbh-tr-delta: %f, max-delta: %f, bpv: %f, flow: %f, bpv_ts: %d, millis: %d",
+                tvbh_state, tr_state, tvbh_tr_delta, m_max_spread.tvbh_tr, bpv->state, flow_rate->state,
                     m_bpv_error_detection.get_error_detection_timestamp(),
                     esphome::millis());
 
             if (m_bpv_error_detection.handle_error_detection(is_error_state)) {
-                ESP_LOGE(ERROR_CODE_TAG, "3UV BPV defekt (1) => tvbh: %f, tr: %f, max_spread: %f, dhw_mixer_pos: %f, flow_rate: %f",
-                    tvbh_state, tr_state, m_max_spread.tvbh_tr, bpv->state, flow_rate->state);
+                ESP_LOGE(ERROR_CODE_TAG, "3UV BPV defekt (1) => tvbh: %f, tr: %f, tvbh-tr-delta: %f, max-delta: %f, dhw_mixer_pos: %f, flow_rate: %f",
+                    tvbh_state, tr_state, tvbh_tr_delta, m_max_spread.tvbh_tr, bpv->state, flow_rate->state);
                 return new_state + "|3UV BPV " + Translation::T_DEFECT;
             }
         }
