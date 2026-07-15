@@ -62,6 +62,82 @@ sensor:
     name: "WiFi Signal Sensor"
     update_interval: 60s
 
+  - platform: template
+    name: "Receive Errors"
+    state_class: "total_increasing"
+    entity_category: diagnostic
+    accuracy_decimals: 0
+    update_interval: 10s
+    lambda: |-
+      twai_status_info_t status_info;
+      if (twai_get_status_info(&status_info) == ESP_OK) {
+        return (int)status_info.rx_error_counter;
+      } else {
+        return NAN;
+      }
+
+  - platform: template
+    name: "Transmit Errors"
+    state_class: "total_increasing"
+    entity_category: diagnostic
+    accuracy_decimals: 0
+    update_interval: 10s
+    lambda: |-
+      twai_status_info_t status_info;
+      if (twai_get_status_info(&status_info) == ESP_OK) {
+        return (int)status_info.tx_error_counter;
+      } else {
+        return NAN;
+      }
+
+  - platform: template
+    name: "Messages in RX Queue"
+    id: can_msgs_rx
+    state_class: "measurement"
+    entity_category: diagnostic
+    unit_of_measurement: ""
+    accuracy_decimals: 0
+    lambda: |-
+      twai_status_info_t status;
+      if (twai_get_status_info(&status) == ESP_OK) return status.msgs_to_rx;
+      return NAN;
+
+  - platform: template
+    name: "Messages in TX Queue"
+    id: can_msgs_tx
+    state_class: "measurement"
+    entity_category: diagnostic
+    unit_of_measurement: ""
+    accuracy_decimals: 0
+    lambda: |-
+      twai_status_info_t status;
+      if (twai_get_status_info(&status) == ESP_OK) return status.msgs_to_tx;
+      return NAN;
+
+  - platform: template
+    name: "Arbitration Lost Count"
+    id: can_arb_lost
+    unit_of_measurement: ""
+    state_class: "total_increasing"
+    entity_category: diagnostic
+    accuracy_decimals: 0
+    lambda: |-
+      twai_status_info_t status;
+      if (twai_get_status_info(&status) == ESP_OK) return status.arb_lost_count;
+      return NAN;
+
+  - platform: template
+    name: "Bus Error Count"
+    id: can_bus_errors
+    unit_of_measurement: ""
+    state_class: "total_increasing"
+    entity_category: diagnostic
+    accuracy_decimals: 0
+    lambda: |-
+      twai_status_info_t status;
+      if (twai_get_status_info(&status) == ESP_OK) return status.bus_error_count;
+      return NAN;
+
 button:
   - platform: restart
     name: "Rotex ESP Restart"
@@ -89,6 +165,22 @@ text_sensor:
       name: ESP IP Address
     ssid:
       name: ESP Connected SSID
+
+  - platform: template
+    name: "Bus Status"
+    entity_category: diagnostic
+    lambda: |-
+      twai_status_info_t status_info;
+      if (twai_get_status_info(&status_info) == ESP_OK) {
+        switch (status_info.state) {
+          case TWAI_STATE_STOPPED:    return std::string("Stopped");
+          case TWAI_STATE_RUNNING:    return std::string("Running");
+          case TWAI_STATE_BUS_OFF:    return std::string("Bus Off!");
+          case TWAI_STATE_RECOVERING: return std::string("Recovering");
+          default:                    return std::string("Error Passive/Warning");
+        }
+      }
+      return std::string("Unknown");
 
 canbus:
   - platform: esp32_can
