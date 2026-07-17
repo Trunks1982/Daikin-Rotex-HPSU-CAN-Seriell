@@ -3,6 +3,7 @@
 #include "esphome/components/daikin_rotex_can/accessor.h"
 #include "esphome/components/daikin_rotex_can/types.h"
 #include "esphome/components/daikin_rotex_can/utils.h"
+#include "esphome/components/daikin_rotex_can/entity_type.h"
 #include "esphome/components/esp32_can/esp32_can.h"
 #include "esphome/core/entity_base.h"
 #include "esphome/core/hal.h"
@@ -13,6 +14,13 @@
 
 namespace esphome {
 namespace daikin_rotex_can {
+
+class CanSensor;
+class CanTextSensor;
+class CanBinarySensor;
+class CanNumber;
+class CanSelect;
+class CanSwitch;
 
 class TEntity {
     static const uint16_t DC = 0xFFFF; // Don't care
@@ -26,6 +34,7 @@ public:
 
     struct TEntityArguments {
         EntityBase* pEntity;
+        EntityType entity_type;
         std::string id;
         uint16_t can_id;
         TMessage command;
@@ -44,6 +53,7 @@ public:
 
         TEntityArguments()
         : pEntity(nullptr)
+        , entity_type(EntityType::UNKNOWN)
         , id("")
         , can_id(0x0)
         , command({})
@@ -64,6 +74,7 @@ public:
 
         TEntityArguments(
             EntityBase* _pEntity,
+            EntityType _entity_type,
             std::string const& _id,
             uint16_t _can_id,
             std::string const& _command,
@@ -81,6 +92,7 @@ public:
             bool _set_lambda_set
         )
         : pEntity(_pEntity)
+        , entity_type(_entity_type)
         , id(_id)
         , can_id(_can_id)
         , command(Utils::str_to_bytes_array8(_command))
@@ -104,6 +116,8 @@ public:
 
     std::string const& get_id() const { return m_config.id; }
     void set_id(std::string const& id) { m_config.id = id; }
+
+    EntityType getType() const { return m_config.pEntity != nullptr ? m_config.entity_type : EntityType::UNKNOWN; }
 
     std::string getName() const {
         return m_config.pEntity != nullptr ? m_config.pEntity->get_name().str() : "<INVALID>";
@@ -161,6 +175,24 @@ public:
 
     bool isGetInProgress() const;
     uint32_t get_update_interval() const { return m_config.update_interval; }
+
+    CanSensor* asSensor();
+    CanSensor const* asSensor() const;
+
+    CanTextSensor* asTextSensor();
+    CanTextSensor const* asTextSensor() const;
+
+    CanBinarySensor* asBinarySensor();
+    CanBinarySensor const* asBinarySensor() const;
+
+    CanNumber* asNumber();
+    CanNumber const* asNumber() const;
+
+    CanSelect* asSelect();
+    CanSelect const* asSelect() const;
+
+    CanSwitch* asSwitch();
+    CanSwitch const* asSwitch() const;
 
     static std::array<uint16_t, 7> calculate_reponse(TMessage const& message);
 

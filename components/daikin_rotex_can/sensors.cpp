@@ -143,7 +143,7 @@ void CanSelect::publish_select_key(uint16_t key) {
     if (it != m_map.end()) {
         publish_state(it->second);
     } else {
-        ESP_LOGE(CAN_SELECT_TAG, "publish_select_key(%s) => Key not found!", key);
+        ESP_LOGE(CAN_SELECT_TAG, "publish_select_key(%u) => Key not found!", key);
     }
 }
 

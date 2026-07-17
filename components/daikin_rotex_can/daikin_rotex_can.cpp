@@ -110,11 +110,11 @@ void DaikinRotexCanComponent::setup() {
             Utils::to_hex(pEntity->get_config().can_id).c_str(), Utils::to_hex(pEntity->get_config().command).c_str());
 
         pEntity->set_canbus(m_pCanbus);
-        if (CanTextSensor* pTextSensor = dynamic_cast<CanTextSensor*>(pEntity)) {
+        if (CanTextSensor* pTextSensor = pEntity->asTextSensor()) {
             pTextSensor->set_recalculate_state([this](EntityBase* pEntity, std::string const& state){
                 return recalculate_state(pEntity, state);
             });
-        } else if (CanSelect* pSelect = dynamic_cast<CanSelect*>(pEntity)) {
+        } else if (CanSelect* pSelect = pEntity->asSelect()) {
             pSelect->set_custom_select_lambda([this](std::string const& id, uint16_t key){
                 return on_custom_select(id, key);
             });
@@ -127,7 +127,7 @@ void DaikinRotexCanComponent::setup() {
     m_entity_manager.removeInvalidRequests();
     const uint32_t size = m_entity_manager.size();
 
-    ESP_LOGI(TAG, "entities.size: %d", size);
+    ESP_LOGI(TAG, "entities.size: %u", static_cast<unsigned>(size));
 
     CanSelect* p_optimized_defrosting = m_entity_manager.get_select(OPTIMIZED_DEFROSTING);
     if (p_optimized_defrosting != nullptr) {
@@ -184,10 +184,10 @@ void DaikinRotexCanComponent::updateState(std::string const& id) {
         if (config.update_lambda_set) {
             std::string value = config.update_lambda(*this);
 
-            if (CanTextSensor* pTextSensor = dynamic_cast<CanTextSensor*>(pEntity)) {
+            if (CanTextSensor* pTextSensor = pEntity->asTextSensor()) {
                 pTextSensor->publish_state(value);
             } else {
-                ESP_LOGE(TAG, "Unsupported entityy type: %s", id.c_str());
+                ESP_LOGE(TAG, "Unsupported entity type: %s", id.c_str());
             }
             return;
         }
@@ -401,9 +401,9 @@ void DaikinRotexCanComponent::dhw_run() {
         float temp1 {70};
         float temp2 {0};
 
-        if (CanNumber const* pNumber = dynamic_cast<CanNumber const*>(pEntity)) {
+        if (CanNumber const* pNumber = pEntity->asNumber()) {
             temp2 = pNumber->state;
-        } else if (CanSelect const* pSelect = dynamic_cast<CanSelect const*>(pEntity)) {
+        } else if (CanSelect const* pSelect = pEntity->asSelect()) {
             temp2 = pSelect->getKey(pSelect->current_option()) / pEntity->get_config().divider;
         }
 
@@ -429,22 +429,22 @@ void DaikinRotexCanComponent::dhw_run() {
 
 void DaikinRotexCanComponent::dump() {
     ESP_LOGI(TAG, "------------------------------------------");
-    ESP_LOGI(TAG, "------------ DUMP %d Entities ------------", m_entity_manager.size());
+    ESP_LOGI(TAG, "------------ DUMP %u Entities ------------", static_cast<unsigned>(m_entity_manager.size()));
     ESP_LOGI(TAG, "------------------------------------------");
 
     for (auto index = 0; index < m_entity_manager.size(); ++index) {
         TEntity const* pEntity = m_entity_manager.get(index);
         if (pEntity != nullptr) {
-            if (CanSensor const* pSensor = dynamic_cast<CanSensor const*>(pEntity)) {
+            if (CanSensor const* pSensor = pEntity->asSensor()) {
                 ESP_LOGI(TAG, "%s: %f", pSensor->get_name().c_str(), pSensor->get_state());
-            } else if (CanBinarySensor const* pBinarySensor = dynamic_cast<CanBinarySensor const*>(pEntity)) {
+            } else if (CanBinarySensor const* pBinarySensor = pEntity->asBinarySensor()) {
                 ESP_LOGI(TAG, "%s: %d", pBinarySensor->get_name().c_str(), pBinarySensor->state);
-            } else if (CanNumber const* pNumber = dynamic_cast<CanNumber const*>(pEntity)) {
+            } else if (CanNumber const* pNumber = pEntity->asNumber()) {
                 ESP_LOGI(TAG, "%s: %f", pNumber->get_name().c_str(), pNumber->state);
-            } else if (CanTextSensor const* pTextSensor = dynamic_cast<CanTextSensor const*>(pEntity)) {
+            } else if (CanTextSensor const* pTextSensor = pEntity->asTextSensor()) {
                 ESP_LOGI(TAG, "%s: %s", pTextSensor->get_name().c_str(), pTextSensor->get_state().c_str());
-            } else if (CanSelect const* pSelect = dynamic_cast<CanSelect const*>(pEntity)) {
-                ESP_LOGI(TAG, "%s: %s", pSelect->get_name().c_str(), pSelect->current_option());
+            } else if (CanSelect const* pSelect = pEntity->asSelect()) {
+                ESP_LOGI(TAG, "%s: %s", pSelect->get_name().c_str(), pSelect->current_option().c_str());
             }
         } else {
             ESP_LOGE(TAG, "Entity with index<%d> not found!", index);

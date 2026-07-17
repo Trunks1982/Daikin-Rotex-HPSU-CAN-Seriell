@@ -1,4 +1,5 @@
 #include "esphome/components/daikin_rotex_can/entity.h"
+#include "esphome/components/daikin_rotex_can/sensors.h"
 #include "esphome/components/esp32_can/esp32_can.h"
 #include "esphome/core/log.h"
 
@@ -17,6 +18,54 @@ TEntity::TEntity()
 , m_last_value_change_timestamp(0u)
 , m_post_handle_lambda()
 {
+}
+
+CanSensor* TEntity::asSensor() {
+    return getType() == EntityType::SENSOR ? static_cast<CanSensor*>(this) : nullptr;
+}
+
+CanSensor const* TEntity::asSensor() const {
+    return getType() == EntityType::SENSOR ? static_cast<CanSensor const*>(this) : nullptr;
+}
+
+CanTextSensor* TEntity::asTextSensor() {
+    return getType() == EntityType::TEXT_SENSOR ? static_cast<CanTextSensor*>(this) : nullptr;
+}
+
+CanTextSensor const* TEntity::asTextSensor() const {
+    return getType() == EntityType::TEXT_SENSOR ? static_cast<CanTextSensor const*>(this) : nullptr;
+}
+
+CanBinarySensor* TEntity::asBinarySensor() {
+    return getType() == EntityType::BINARY_SENSOR ? static_cast<CanBinarySensor*>(this) : nullptr;
+}
+
+CanBinarySensor const* TEntity::asBinarySensor() const {
+    return getType() == EntityType::BINARY_SENSOR ? static_cast<CanBinarySensor const*>(this) : nullptr;
+}
+
+CanNumber* TEntity::asNumber() {
+    return getType() == EntityType::NUMBER ? static_cast<CanNumber*>(this) : nullptr;
+}
+
+CanNumber const* TEntity::asNumber() const {
+    return getType() == EntityType::NUMBER ? static_cast<CanNumber const*>(this) : nullptr;
+}
+
+CanSelect* TEntity::asSelect() {
+    return getType() == EntityType::SELECT ? static_cast<CanSelect*>(this) : nullptr;
+}
+
+CanSelect const* TEntity::asSelect() const {
+    return getType() == EntityType::SELECT ? static_cast<CanSelect const*>(this) : nullptr;
+}
+
+CanSwitch* TEntity::asSwitch() {
+    return getType() == EntityType::SWITCH ? static_cast<CanSwitch*>(this) : nullptr;
+}
+
+CanSwitch const* TEntity::asSwitch() const {
+    return getType() == EntityType::SWITCH ? static_cast<CanSwitch const*>(this) : nullptr;
 }
 
 std::array<uint16_t, 7> TEntity::calculate_reponse(TMessage const& message) {

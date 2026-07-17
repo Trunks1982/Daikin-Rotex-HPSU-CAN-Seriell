@@ -48,6 +48,16 @@ UNIT_BAR = "bar"
 UNIT_LITER_PER_HOUR = "L/h"
 UNIT_LITER_PER_MIN = "L/min"
 
+ENTITY_TYPE_MAP = {
+    "sensor": cg.RawExpression("esphome::daikin_rotex_can::EntityType::SENSOR"),
+    "text_sensor": cg.RawExpression("esphome::daikin_rotex_can::EntityType::TEXT_SENSOR"),
+    "binary_sensor": cg.RawExpression("esphome::daikin_rotex_can::EntityType::BINARY_SENSOR"),
+    "number": cg.RawExpression("esphome::daikin_rotex_can::EntityType::NUMBER"),
+    "select": cg.RawExpression("esphome::daikin_rotex_can::EntityType::SELECT"),
+    "switch": cg.RawExpression("esphome::daikin_rotex_can::EntityType::SWITCH"),
+    "unknown": cg.RawExpression("esphome::daikin_rotex_can::EntityType::UNKNOWN"),
+}
+
 ########## Icons ##########
 ICON_SUN_SNOWFLAKE_VARIANT = "mdi:sun-snowflake-variant"
 
@@ -1954,8 +1964,7 @@ CONFIG_SCHEMA = cv.Schema(
 
 async def to_code(config):
 
-    cg.set_cpp_standard("gnu++20")
-    cg.add_build_unflag("-fno-rtti")
+    cg.set_cpp_standard("gnu++23")
 
     cg.add_global(cg.RawStatement("#include \"esphome/components/daikin_rotex_can/accessor.h\""))
     cg.add_global(cg.RawStatement("#include \"esphome/components/daikin_rotex_can/utils.h\""))
@@ -2009,6 +2018,7 @@ async def to_code(config):
         for sens_conf in sensor_configuration:
             if yaml_sensor_conf := entities.get(sens_conf.get("name")):
                 entity = None
+                entity_type = ENTITY_TYPE_MAP["unknown"]
                 divider = sens_conf.get("divider", 1.0)
 
                 # translate maps
@@ -2021,24 +2031,30 @@ async def to_code(config):
                 match sens_conf.get("type"):
                     case "sensor":
                         entity = await sensor.new_sensor(yaml_sensor_conf)
+                        entity_type = ENTITY_TYPE_MAP["sensor"]
                         cg.add(entity.set_range(sens_conf.get("range", [0, 0])))
                     case "text_sensor":
                         entity = await text_sensor.new_text_sensor(yaml_sensor_conf)
+                        entity_type = ENTITY_TYPE_MAP["text_sensor"]
                         cg.add(entity.set_map(str_map))
                     case "binary_sensor":
                         entity = await binary_sensor.new_binary_sensor(yaml_sensor_conf)
+                        entity_type = ENTITY_TYPE_MAP["binary_sensor"]
                     case "select":
                         entity = await select.new_select(yaml_sensor_conf, options = list(mapping.values()))
+                        entity_type = ENTITY_TYPE_MAP["select"]
                         cg.add(entity.set_map(str_map))
                         await cg.register_parented(entity, var)
                     case "switch":
                         match yaml_sensor_conf.get("type"):
                             case "switch":
                                 entity = await switch.new_switch(yaml_sensor_conf)
+                                entity_type = ENTITY_TYPE_MAP["switch"]
                             case "select":
                                 mapping = {0x00: translate("off"), 0x01: translate("on")}
                                 str_map = "|".join([f"0x{int(key):02X}:{value}" for key, value in mapping.items()])
                                 entity = await select.new_select(yaml_sensor_conf, options=list(mapping.values()))
+                                entity_type = ENTITY_TYPE_MAP["select"]
                                 cg.add(entity.set_map(str_map))
                         await cg.register_parented(entity, var)
 
@@ -2058,8 +2074,10 @@ async def to_code(config):
                                     max_value=sens_conf.get("max_value"),
                                     step=sens_conf.get("step")
                                 )
+                                entity_type = ENTITY_TYPE_MAP["number"]
                             case "select":
                                 entity = await select.new_select(yaml_sensor_conf, options = list(mapping.values()))
+                                entity_type = ENTITY_TYPE_MAP["select"]
                                 cg.add(entity.set_map(str_map))
 
                         await cg.register_parented(entity, var)
@@ -2104,6 +2122,7 @@ async def to_code(config):
                     sens_conf.get("name"),
                     [
                         entity,
+                        entity_type,
                         sens_conf.get("name"), # Entity id
                         sens_conf.get("can_id", 0x180),
                         sens_conf.get("command", ""),
