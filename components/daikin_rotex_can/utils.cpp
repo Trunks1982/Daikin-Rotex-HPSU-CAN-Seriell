@@ -35,7 +35,7 @@ std::vector<std::string> Utils::split(std::string const& str) {
 
 std::string Utils::to_hex(uint32_t value) {
     char hex_string[20];
-    sprintf(hex_string, "0x%02X", value);
+    sprintf(hex_string, "0x%02lX", static_cast<unsigned long>(value));
     return std::string(hex_string);
 }
 
