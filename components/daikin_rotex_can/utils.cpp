@@ -2,7 +2,7 @@
 #include "esphome/core/log.h"
 #include "esphome/core/hal.h"
 #include <iomanip>
-//#include <cctype>
+#include <inttypes.h>
 
 namespace esphome {
 namespace daikin_rotex_can {
@@ -35,7 +35,7 @@ std::vector<std::string> Utils::split(std::string const& str) {
 
 std::string Utils::to_hex(uint32_t value) {
     char hex_string[20];
-    sprintf(hex_string, "0x%02X", value);
+    sprintf(hex_string, "0x%02" PRIX32, value);
     return std::string(hex_string);
 }
 

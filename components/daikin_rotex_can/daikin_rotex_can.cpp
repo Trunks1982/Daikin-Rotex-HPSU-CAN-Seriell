@@ -632,7 +632,7 @@ std::string DaikinRotexCanComponent::recalculate_state(EntityBase* pEntity, std:
         if (p_betriebs_art != nullptr && flow_rate != nullptr && dhw_mixer_position != nullptr && state_compressor != nullptr && tdhw1 != nullptr) {
             const bool is_error_state = p_betriebs_art->state == Translation::T_HOT_WATER_PRODUCTION && tdhw1->state < 48.0 && (flow_rate->state == 0.0f || dhw_mixer_position->state == 0.0f || !state_compressor->state);
             if (m_dhw_error_detection.handle_error_detection(is_error_state)) {
-                ESP_LOGE(TAG, "DHW error => flow: %d, mixer_pos: %d, state_compressor: %d", flow_rate->state, dhw_mixer_position->state, state_compressor->state);
+                ESP_LOGE(TAG, "DHW error => flow: %f, mixer_pos: %f, state_compressor: %d", flow_rate->state, dhw_mixer_position->state, state_compressor->state);
                 return new_state + "|" + Translation::T_MISSING_FLOW;
             }
         }
