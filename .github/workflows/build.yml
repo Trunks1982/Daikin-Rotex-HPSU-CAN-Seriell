@@ -77,7 +77,7 @@ jobs:
             esphome compile "examples/full_${LANG}.yaml"
 
             mkdir -p bin/
-            mv examples/.esphome/build/hpsu-can/.pioenvs/hpsu-can/firmware.factory.bin "bin/hpsu-can-${LANG}.factory-gpios-tx05-rx06.bin"
+            mv examples/.esphome/build/hpsu-can/build/firmware.factory.bin "bin/hpsu-can-${LANG}.factory-gpios-tx05-rx06.bin"
           done
 
       - name: Archive compiled binaries
