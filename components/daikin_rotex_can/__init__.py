@@ -39,6 +39,7 @@ CanTextSensor = daikin_rotex_can_ns.class_("CanTextSensor", text_sensor.TextSens
 
 LogFilterText = daikin_rotex_can_ns.class_("LogFilterText", text.Text)
 CustomRequestText = daikin_rotex_can_ns.class_("CustomRequestText", text.Text)
+CanProgramText = daikin_rotex_can_ns.class_("CanProgramText", text.Text)
 
 DHWRunButton = daikin_rotex_can_ns.class_("DHWRunButton", button.Button)
 DumpButton = daikin_rotex_can_ns.class_("DumpButton", button.Button)
@@ -55,6 +56,7 @@ ENTITY_TYPE_MAP = {
     "number": cg.RawExpression("esphome::daikin_rotex_can::EntityType::NUMBER"),
     "select": cg.RawExpression("esphome::daikin_rotex_can::EntityType::SELECT"),
     "switch": cg.RawExpression("esphome::daikin_rotex_can::EntityType::SWITCH"),
+    "text": cg.RawExpression("esphome::daikin_rotex_can::EntityType::TEXT"),
     "unknown": cg.RawExpression("esphome::daikin_rotex_can::EntityType::UNKNOWN"),
 }
 
@@ -1728,9 +1730,26 @@ CONF_MAX_SPREAD_TVBH_TV = "max_spread_tvbh_tv"
 CONF_MAX_SPREAD_TVBH_TR = "max_spread_tvbh_tr"
 CONF_LOG_FILTER_TEXT = "log_filter"
 CONF_CUSTOM_REQUEST_TEXT = "custom_request"
+CONF_HZ_PROGRAMM_1 = "hz_programm_1"
 CONF_ENTITIES = "entities"
 CONF_SELECT_OPTIONS = "options"
 CONF_PROJECT_GIT_HASH = "project_git_hash"
+
+# "HZ Programm 1" heating program: 10 day/group blocks (3 time windows each) on data page 0x14.
+# Each block starts at the given register offset and uses 3 consecutive registers for the
+# 3 time windows (each register = start/end time as quarter-hour indices, 0x80 = unused).
+HZ_PROGRAM_1_BLOCKS = [
+    ("Mo", 0x10),
+    ("Di", 0x20),
+    ("Mi", 0x30),
+    ("Do", 0x40),
+    ("Fr", 0x50),
+    ("Sa", 0x60),
+    ("So", 0x70),
+    ("MF", 0x80),
+    ("SS", 0x90),
+    ("MS", 0xA0),
+]
 
 ########## Sensors ##########
 
@@ -1943,6 +1962,10 @@ CONFIG_SCHEMA = cv.Schema(
             CustomRequestText,
             mode="text"
         ),
+        cv.Optional(CONF_HZ_PROGRAMM_1): text.text_schema(
+            CanProgramText,
+            mode="text"
+        ),
         cv.Required(CONF_PROJECT_GIT_HASH): text_sensor.text_sensor_schema(
             icon="mdi:git",
             entity_category=ENTITY_CATEGORY_DIAGNOSTIC
@@ -2001,6 +2024,64 @@ async def to_code(config):
     if text_conf := config.get(CONF_CUSTOM_REQUEST_TEXT):
         t = await text.new_text(text_conf)
         await cg.register_parented(t, var)
+
+    ########## HZ Programm 1 (read-only multi-command text entity) ##########
+
+    if program_conf := config.get(CONF_HZ_PROGRAMM_1):
+        program_entity = await text.new_text(program_conf)
+
+        default_handle_lambda = await cg.process_lambda(
+            Lambda("return 0;"),
+            [(std_array_u8_7_const_ref, "data")],
+            return_type=cg.uint16,
+        )
+        default_update_lambda = await cg.process_lambda(
+            Lambda("return {};"),
+            [(accessor_const_ref, "accessor")],
+            return_type=cg.std_string,
+        )
+        default_set_lambda = await cg.process_lambda(
+            Lambda(""),
+            [(std_array_u8_7_ref, "data"), (cg.uint16, "value")],
+            return_type=cg.void,
+        )
+
+        update_interval = config[CONF_UPDATE_INTERVAL]
+        if hasattr(update_interval, 'total_milliseconds'):
+            update_interval = int(update_interval.total_milliseconds)
+        else:
+            update_interval = int(update_interval)
+
+        cg.add(program_entity.set_entity(
+            CONF_HZ_PROGRAMM_1,
+            [
+                program_entity,
+                ENTITY_TYPE_MAP["text"],
+                CONF_HZ_PROGRAMM_1,            # Entity id
+                0x300,                          # can_id of the HPSU boiler
+                "61 00 FA 14 10 00 00",        # first command (Mo, window 1)
+                5,                              # data_offset
+                2,                              # data_size
+                1.0,                            # divider
+                False,                          # isSigned
+                [],                             # update_entities
+                update_interval,
+                default_handle_lambda,
+                default_update_lambda,
+                default_set_lambda,
+                False,                          # handle_lambda_set
+                False,                          # update_lambda_set
+                False,                          # set_lambda_set
+            ],
+            var
+        ))
+
+        for label, register_base in HZ_PROGRAM_1_BLOCKS:
+            cg.add(program_entity.add_label(label))
+            for window in range(3):
+                cg.add(program_entity.add_command(register_base + window))
+
+        cg.add(var.add_entity(program_entity))
 
     ########## Text Sensors ##########
 

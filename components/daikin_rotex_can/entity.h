@@ -164,16 +164,16 @@ public:
     virtual void update(uint32_t millis);
 
     bool isMatch(uint32_t can_id, TMessage const& responseData) const;
-    bool handle(uint32_t can_id, TMessage const& responseData);
+    virtual bool handle(uint32_t can_id, TMessage const& responseData);
 
-    bool sendGet(esphome::esp32_can::ESP32Can* pCanBus);
+    virtual bool sendGet(esphome::esp32_can::ESP32Can* pCanBus);
     bool sendSet(esphome::esp32_can::ESP32Can* pCanBus, float value);
 
-    bool isGetNeeded() const;
-    uint32_t getOverdueTime() const;
+    virtual bool isGetNeeded() const;
+    virtual uint32_t getOverdueTime() const;
     bool is_command_configured() const;
 
-    bool isGetInProgress() const;
+    virtual bool isGetInProgress() const;
     uint32_t get_update_interval() const { return m_config.update_interval; }
 
     CanSensor* asSensor();
@@ -210,13 +210,13 @@ protected:
 protected:
     TEntityArguments m_config;
     esphome::esp32_can::ESP32Can* m_pCanbus;
+    uint32_t m_last_handle_timestamp;
+    uint32_t m_last_get_timestamp;
+    uint32_t m_last_value_change_timestamp;
 
 private:
     IAccessor const* m_pAccessor;
     std::array<uint16_t, 7> m_expected_reponse;
-    uint32_t m_last_handle_timestamp;
-    uint32_t m_last_get_timestamp;
-    uint32_t m_last_value_change_timestamp;
     TPostHandleLabda m_post_handle_lambda;
 };
 

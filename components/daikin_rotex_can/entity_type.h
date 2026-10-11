@@ -10,6 +10,7 @@ enum class EntityType {
     NUMBER,
     SELECT,
     SWITCH,
+    TEXT,
     UNKNOWN
 };
 

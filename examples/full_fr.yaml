@@ -211,6 +211,8 @@ daikin_rotex_can:
     name: Log Filter
   custom_request:
     name: Custom Request
+  hz_programm_1:
+    name: HZ Programm 1
   dump:
     name: Dump Senors
   project_git_hash:
