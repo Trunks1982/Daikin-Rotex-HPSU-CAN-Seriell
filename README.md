@@ -18,6 +18,7 @@ Eine Übersicht unterstützter ESP32-Varianten und deren unterstützte Bitrate f
 
 ## Homeassistant - Dashboard
 [![Bild 1](images/ha-dashboard-thumb.png)](images/ha-dashboard.png)
+[![Bild 2](images/ha-dashboard-thumb.png)](images/Rotex_Dashboard.png)
 
 Das [HPSU Dashboard für Home Assistant](https://github.com/wrfz/daikin-rotex-hpsu-dashboard) ist ein Add-on, das hilft, die Funktionsweise der Wärmepumpe leicht verständlich in Echtzeit nachzuvollziehen.
 
