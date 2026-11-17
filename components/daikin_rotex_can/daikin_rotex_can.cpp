@@ -476,7 +476,6 @@ void DaikinRotexCanComponent::loop() {
 
 void DaikinRotexCanComponent::update_supply_setpoint_regulated() {
     CanTextSensor const* p_betriebs_art = m_entity_manager.get_text_sensor(BETRIEBS_ART);
-    CanBinarySensor const* state_compressor = m_entity_manager.get_binary_sensor(STATE_COMPRESSOR);
     CanNumber const* pMaxTVorlauf = m_entity_manager.get_number(MAX_TARGET_FLOW_TEMP, false);
     CanSensor const* pTv = m_entity_manager.get_sensor("tv");
     CanSensor const* pVorlaufSoll = m_entity_manager.get_sensor("target_supply_temperature");
@@ -485,43 +484,37 @@ void DaikinRotexCanComponent::update_supply_setpoint_regulated() {
         return;
     }
 
-    if (p_betriebs_art->state != Translation::T_HEATING) {
-        return;
-    }
+    if (p_betriebs_art->state == Translation::T_HEATING || p_betriebs_art->state == Translation::T_STANDBY) {
+        const float max_t_vorlauf = pMaxTVorlauf->state;
+        const float tv = pTv->state;
+        const float vorlauf_soll = pVorlaufSoll->state;
+        const float vorlauf_soll_reguliert = m_supply_setpoint_regulated->state;
 
-    if (state_compressor == nullptr || !state_compressor->state) {
-        return;
-    }
-
-    const float max_t_vorlauf = pMaxTVorlauf->state;
-    const float tv = pTv->state;
-    const float vorlauf_soll = pVorlaufSoll->state;
-    const float vorlauf_soll_reguliert = m_supply_setpoint_regulated->state;
-
-    if (std::isnan(vorlauf_soll_reguliert) || vorlauf_soll_reguliert == 0) {
-        return;
-    }
-
-    if (m_last_supply_setpoint_regulated_ts == 0u || esphome::millis() > (m_last_supply_setpoint_regulated_ts + 30 * 1000)) {
-        if (max_t_vorlauf != vorlauf_soll_reguliert) {
-            float vorlauf_soll_request = vorlauf_soll;
-            if (tv > vorlauf_soll && (tv - vorlauf_soll) > 2.5) {
-                vorlauf_soll_request = std::round(tv - 1.5);
-            } else if (vorlauf_soll_reguliert >= tv) {
-                vorlauf_soll_request = vorlauf_soll_reguliert;
-            } else if ((tv - vorlauf_soll_reguliert) < 1.5) {
-                vorlauf_soll_request = vorlauf_soll_reguliert;
-            } else {
-                vorlauf_soll_request = std::round(tv - 1.5);
-            }
-            if (vorlauf_soll_request != vorlauf_soll) {
-                Utils::log(TAG, "request vorlauf_soll_request: %f, tv: %f, max_t_vorlauf: %f, vorlauf_soll_reguliert: %f",
-                    vorlauf_soll_request, tv, max_t_vorlauf, vorlauf_soll_reguliert);
-
-                m_entity_manager.sendSet(pMaxTVorlauf->get_name(), vorlauf_soll_request);
-            }
+        if (std::isnan(vorlauf_soll_reguliert) || vorlauf_soll_reguliert == 0) {
+            return;
         }
-        m_last_supply_setpoint_regulated_ts = esphome::millis();
+
+        if (m_last_supply_setpoint_regulated_ts == 0u || esphome::millis() > (m_last_supply_setpoint_regulated_ts + 30 * 1000)) {
+            if (max_t_vorlauf != vorlauf_soll_reguliert) {
+                float vorlauf_soll_request = vorlauf_soll;
+                if (tv > vorlauf_soll && (tv - vorlauf_soll) > 2.5) {
+                    vorlauf_soll_request = std::round(tv - 1.5);
+                } else if (vorlauf_soll_reguliert >= tv) {
+                    vorlauf_soll_request = vorlauf_soll_reguliert;
+                } else if ((tv - vorlauf_soll_reguliert) < 1.5) {
+                    vorlauf_soll_request = vorlauf_soll_reguliert;
+                } else {
+                    vorlauf_soll_request = std::round(tv - 1.5);
+                }
+                if (vorlauf_soll_request != max_t_vorlauf) {
+                    Utils::log(TAG, "request vorlauf_soll_request: %f, tv: %f, max_t_vorlauf: %f, vorlauf_soll_reguliert: %f",
+                        vorlauf_soll_request, tv, max_t_vorlauf, vorlauf_soll_reguliert);
+
+                    m_entity_manager.sendSet(pMaxTVorlauf->get_name(), vorlauf_soll_request);
+                }
+            }
+            m_last_supply_setpoint_regulated_ts = esphome::millis();
+        }
     }
 }
 
