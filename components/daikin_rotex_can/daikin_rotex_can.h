@@ -8,6 +8,7 @@
 #include "esphome/components/esp32_can/esp32_can.h"
 #include "esphome/core/component.h"
 #include <list>
+#include <vector>
 
 namespace esphome {
 namespace daikin_rotex_can {
@@ -59,6 +60,8 @@ public:
     void add_entity(TEntity* pEntity);
     void set_supply_setpoint_regulated(number::Number* pNumber);
     void set_delay_between_requests(uint16_t milliseconds);
+    void set_manifest_action_name(const char* action_name);
+    void add_manifest_page(const char* page);
 
     void on_post_handle(TEntity* pRequest, TEntity::TVariant const& current, TEntity::TVariant const& previous);
 
@@ -134,6 +137,8 @@ private:
     number::Number* m_supply_setpoint_regulated;
     uint32_t m_last_supply_setpoint_regulated_ts;
     CallHandle m_dhw_set_back_temp_handle;
+    const char* m_manifest_action_name = nullptr;
+    std::vector<const char*> m_manifest_pages;
 };
 
 inline void DaikinRotexCanComponent::set_canbus(esphome::esp32_can::ESP32Can* pCanbus) {
@@ -201,6 +206,14 @@ inline void DaikinRotexCanComponent::set_supply_setpoint_regulated(number::Numbe
 
 inline void DaikinRotexCanComponent::set_delay_between_requests(uint16_t milliseconds) {
     m_entity_manager.set_delay_between_requests(milliseconds);
+}
+
+inline void DaikinRotexCanComponent::set_manifest_action_name(const char* action_name) {
+    m_manifest_action_name = action_name;
+}
+
+inline void DaikinRotexCanComponent::add_manifest_page(const char* page) {
+    m_manifest_pages.push_back(page);
 }
     
 

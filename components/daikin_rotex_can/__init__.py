@@ -17,6 +17,7 @@ from .translations.translate import (
     check_translations_integrity,
     write_cpp_file
 )
+from .manifest import ManifestBuilder, option_values, register_manifest
 
 import subprocess
 import logging
@@ -1716,7 +1717,7 @@ sensor_configuration = [
 
 CODEOWNERS = ["@wrfz"]
 DEPENDENCIES = []
-AUTO_LOAD = ['binary_sensor', 'button', 'number', 'sensor', 'select', 'switch', 'text', 'text_sensor']
+AUTO_LOAD = ['binary_sensor', 'button', 'json', 'number', 'sensor', 'select', 'switch', 'text', 'text_sensor']
 
 CONF_CAN_ID = "canbus_id"
 CONF_UPDATE_INTERVAL = "update_interval"
@@ -1993,26 +1994,34 @@ async def to_code(config):
     # Write cpp translation file
     write_cpp_file(os.path.dirname(__file__))
 
+    manifest = ManifestBuilder()
+    manifest.language = config.get(CONF_LANGUAGE)
+    manifest.git = git_hash or None
+
     ########## Texts ##########
 
     if text_conf := config.get(CONF_LOG_FILTER_TEXT):
         await text.new_text(text_conf)
+        manifest.add(CONF_LOG_FILTER_TEXT, "text", text_conf)
 
     if text_conf := config.get(CONF_CUSTOM_REQUEST_TEXT):
         t = await text.new_text(text_conf)
         await cg.register_parented(t, var)
+        manifest.add(CONF_CUSTOM_REQUEST_TEXT, "text", text_conf)
 
     ########## Text Sensors ##########
 
     if text_conf := config.get(CONF_PROJECT_GIT_HASH):
         t = await text_sensor.new_text_sensor(text_conf)
         cg.add(var.set_project_git_hash(t, git_hash))
+        manifest.add(CONF_PROJECT_GIT_HASH, "text_sensor", text_conf)
 
     ########## Buttons ##########
 
     if button_conf := config.get(CONF_DUMP):
         but = await button.new_button(button_conf)
         await cg.register_parented(but, var)
+        manifest.add(CONF_DUMP, "button", button_conf)
 
     if entities := config.get(CONF_ENTITIES):
         for sens_conf in sensor_configuration:
@@ -2083,6 +2092,27 @@ async def to_code(config):
                         await cg.register_parented(entity, var)
                     case _:
                         raise Exception("Unknown type: " + sens_conf.get("type"))
+
+                # Manifest: the domain the entity was created as, its options as raw value,
+                # translation key and text (texts depend on language and user)
+                domain = sens_conf.get("type")
+                if domain in ("switch", "number"):
+                    domain = yaml_sensor_conf.get("type", domain)
+                if sens_conf.get("type") == "switch" and domain == "select":
+                    values = option_values({0x00: delayed_translate("off"), 0x01: delayed_translate("on")})
+                elif domain == "select" and "options" in yaml_sensor_conf:
+                    values = option_values(yaml_sensor_conf.get("options"))
+                else:
+                    values = option_values(sens_conf.get("map", {}))
+                is_number = domain == "number"
+                manifest.add(
+                    sens_conf.get("name"), domain, yaml_sensor_conf,
+                    unit=sens_conf.get("unit_of_measurement"),
+                    values=values,
+                    min_value=sens_conf.get("min_value") if is_number else None,
+                    max_value=sens_conf.get("max_value") if is_number else None,
+                    step=sens_conf.get("step") if is_number else None,
+                )
 
                 update_interval = yaml_sensor_conf.get(CONF_UPDATE_INTERVAL, None)
                 if update_interval is None:
@@ -2174,11 +2204,18 @@ async def to_code(config):
             cg.add(sens.set_id(CONF_VORLAUF_SOLL_TV_DELTA))
             cg.add(var.set_vorlauf_soll_tv_delta(sens))
 
+        for key in (CONF_THERMAL_POWER, CONF_THERMAL_POWER_RAW, CONF_TEMPERATURE_SPREAD,
+                    CONF_TEMPERATURE_SPREAD_RAW, CONF_TV_TVBH_DELTA, CONF_TVBH_TR_DELTA,
+                    CONF_VORLAUF_SOLL_TV_DELTA):
+            if yaml_sensor_conf := entities.get(key):
+                manifest.add(key, "sensor", yaml_sensor_conf)
+
         ########## Buttons ##########
 
         if button_conf := entities.get(CONF_DHW_RUN):
             but = await button.new_button(button_conf)
             await cg.register_parented(but, var)
+            manifest.add(CONF_DHW_RUN, "button", button_conf)
 
         ########## Numbers ##########
         if number_conf := entities.get(CONF_SUPPLY_SETPOINT_REGULATED):
@@ -2191,3 +2228,7 @@ async def to_code(config):
             cg.add(var.set_supply_setpoint_regulated(num))
 
             await cg.register_parented(num, var)
+            manifest.add(CONF_SUPPLY_SETPOINT_REGULATED, "number", number_conf,
+                         unit=UNIT_CELSIUS, min_value=20.0, max_value=90.0, step=0.1)
+
+    register_manifest(var, manifest)

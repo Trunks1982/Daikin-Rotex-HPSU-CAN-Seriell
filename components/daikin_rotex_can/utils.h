@@ -1,6 +1,8 @@
 #pragma once
 
 #include "esphome/components/daikin_rotex_can/types.h"
+#include "esphome/core/entity_base.h"
+#include "esphome/core/version.h"
 #include <functional>
 #include <memory>
 #include <map>
@@ -13,6 +15,17 @@ class Utils {
 
     using TVoidFunc = std::function<void()>;
 public:
+    /// Name of an entity. EntityBase::get_name() is deprecated from ESPHome 2026.11, its replacement
+    /// write_name_to() does not exist before that version.
+    static std::string entity_name(EntityBase const& entity) {
+#if ESPHOME_VERSION_CODE >= VERSION_CODE(2026, 11, 0)
+        char buffer[ENTITY_NAME_BUF_SIZE];
+        return std::string(buffer, entity.write_name_to(buffer, sizeof(buffer)));
+#else
+        return entity.get_name().str();
+#endif
+    }
+
     template<typename... Args>
     static std::string format(const std::string& format, Args... args) {
         const auto size = std::snprintf(nullptr, 0, format.c_str(), args...) + 1;

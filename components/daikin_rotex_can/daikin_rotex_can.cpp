@@ -1,4 +1,5 @@
 #include "esphome/components/daikin_rotex_can/daikin_rotex_can.h"
+#include "esphome/components/daikin_rotex_can/manifest_action.h"
 #include "esphome/components/daikin_rotex_can/translations.h"
 #include "esphome/components/daikin_rotex_can/sensors.h"
 #include "esphome/components/daikin_rotex_can/entity.h"
@@ -103,6 +104,16 @@ DaikinRotexCanComponent::DaikinRotexCanComponent()
 
 void DaikinRotexCanComponent::setup() {
     ESP_LOGI(TAG, "setup");
+
+#ifdef USE_DAIKIN_ROTEX_CAN_MANIFEST
+    // Registered here, after the generated code has set up the YAML actions
+    // (initialize_user_services() replaces the list, register_user_service() appends).
+    if (!m_manifest_pages.empty() && api::global_api_server != nullptr) {
+        api::global_api_server->register_user_service(new ManifestAction(m_manifest_action_name, m_manifest_pages));
+        ESP_LOGI(TAG, "manifest action '%s' registered (%u page(s))",
+            m_manifest_action_name, static_cast<unsigned>(m_manifest_pages.size()));
+    }
+#endif
 
     for (auto const& pEntity : m_entity_manager.get_entities()) {
         ESP_LOGI("setup", "name: %s, id: %s, can_id: %s, command: %s",
@@ -274,7 +285,7 @@ bool DaikinRotexCanComponent::on_custom_select(std::string const& id, uint8_t va
 
         if (p_temperature_antifreeze != nullptr) {
             if (value != 0) {
-                m_entity_manager.sendSet(p_temperature_antifreeze->get_name(), p_temperature_antifreeze->getKey(Translation::T_OFF));
+                m_entity_manager.sendSet(Utils::entity_name(*p_temperature_antifreeze), p_temperature_antifreeze->getKey(Translation::T_OFF));
             }
         } else {
             ESP_LOGE(TAG, "on_custom_select(%s, %d) => temperature_antifreeze select is missing!", id.c_str(), value);
@@ -321,7 +332,7 @@ void DaikinRotexCanComponent::on_betriebsart(TEntity::TVariant const& current, T
 
                 const uint16_t ui_new_mode = p_betriebs_modus->getKey(new_mode);
                 if (ui_new_mode != 0x0) {
-                    m_entity_manager.sendSet(p_betriebs_modus->get_name(), ui_new_mode);
+                    m_entity_manager.sendSet(Utils::entity_name(*p_betriebs_modus), ui_new_mode);
                 }
             }
         } else {
@@ -436,15 +447,15 @@ void DaikinRotexCanComponent::dump() {
         TEntity const* pEntity = m_entity_manager.get(index);
         if (pEntity != nullptr) {
             if (CanSensor const* pSensor = pEntity->asSensor()) {
-                ESP_LOGI(TAG, "%s: %f", pSensor->get_name().c_str(), pSensor->get_state());
+                ESP_LOGI(TAG, "%s: %f", Utils::entity_name(*pSensor).c_str(), pSensor->get_state());
             } else if (CanBinarySensor const* pBinarySensor = pEntity->asBinarySensor()) {
-                ESP_LOGI(TAG, "%s: %d", pBinarySensor->get_name().c_str(), pBinarySensor->state);
+                ESP_LOGI(TAG, "%s: %d", Utils::entity_name(*pBinarySensor).c_str(), pBinarySensor->state);
             } else if (CanNumber const* pNumber = pEntity->asNumber()) {
-                ESP_LOGI(TAG, "%s: %f", pNumber->get_name().c_str(), pNumber->state);
+                ESP_LOGI(TAG, "%s: %f", Utils::entity_name(*pNumber).c_str(), pNumber->state);
             } else if (CanTextSensor const* pTextSensor = pEntity->asTextSensor()) {
-                ESP_LOGI(TAG, "%s: %s", pTextSensor->get_name().c_str(), pTextSensor->get_state().c_str());
+                ESP_LOGI(TAG, "%s: %s", Utils::entity_name(*pTextSensor).c_str(), pTextSensor->get_state().c_str());
             } else if (CanSelect const* pSelect = pEntity->asSelect()) {
-                ESP_LOGI(TAG, "%s: %s", pSelect->get_name().c_str(), pSelect->current_option().c_str());
+                ESP_LOGI(TAG, "%s: %s", Utils::entity_name(*pSelect).c_str(), pSelect->current_option().c_str());
             }
         } else {
             ESP_LOGE(TAG, "Entity with index<%d> not found!", index);
@@ -518,7 +529,7 @@ void DaikinRotexCanComponent::update_supply_setpoint_regulated() {
                 Utils::log(TAG, "request vorlauf_soll_request: %f, tv: %f, max_t_vorlauf: %f, vorlauf_soll_reguliert: %f",
                     vorlauf_soll_request, tv, max_t_vorlauf, vorlauf_soll_reguliert);
 
-                m_entity_manager.sendSet(pMaxTVorlauf->get_name(), vorlauf_soll_request);
+                m_entity_manager.sendSet(Utils::entity_name(*pMaxTVorlauf), vorlauf_soll_request);
             }
         }
         m_last_supply_setpoint_regulated_ts = esphome::millis();

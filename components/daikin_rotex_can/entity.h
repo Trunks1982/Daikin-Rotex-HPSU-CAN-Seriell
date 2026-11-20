@@ -120,7 +120,7 @@ public:
     EntityType getType() const { return m_config.pEntity != nullptr ? m_config.entity_type : EntityType::UNKNOWN; }
 
     std::string getName() const {
-        return m_config.pEntity != nullptr ? m_config.pEntity->get_name().str() : "<INVALID>";
+        return m_config.pEntity != nullptr ? Utils::entity_name(*m_config.pEntity) : "<INVALID>";
     }
 
     bool isGetSupported() const {
