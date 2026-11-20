@@ -235,13 +235,15 @@ daikin_rotex_can:
       name: Bypass Valve
     tv:
       name: TV
-      update_interval: 5s
+      update_interval: 30s
+    tv_max:  # Highest TV between two updates of TV (read every 1 s)
+      name: TV Max
     tvbh:
       name: TVBH
-      update_interval: 5s
+      update_interval: 30s
     tr:
       name: TR
-      update_interval: 5s
+      update_interval: 30s
     tdhw1:
       name: Hot Water Temperature
     tdhw2:

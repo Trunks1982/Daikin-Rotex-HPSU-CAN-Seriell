@@ -1742,6 +1742,8 @@ CONF_TEMPERATURE_SPREAD_RAW = "temperature_spread_raw"
 CONF_TV_TVBH_DELTA = "tv_tvbh_delta"
 CONF_TVBH_TR_DELTA = "tvbh_tr_delta"
 CONF_VORLAUF_SOLL_TV_DELTA = "vorlauf_soll_tv_delta"
+CONF_TV_MAX = "tv_max"              # Highest Tv between two publishes of tv (needs tv)
+TV_MAX_POLL_MS = 1000               # Tv is read this often when tv_max is configured
 
 CONF_DUMP = "dump"
 CONF_DHW_RUN = "dhw_run"
@@ -1894,6 +1896,13 @@ entity_schemas.update({
         state_class=STATE_CLASS_MEASUREMENT,
         icon="mdi:thermometer-lines"
     ).extend(),
+    cv.Optional(CONF_TV_MAX): sensor.sensor_schema(
+        device_class=DEVICE_CLASS_TEMPERATURE,
+        unit_of_measurement=UNIT_CELSIUS,
+        accuracy_decimals=1,
+        state_class=STATE_CLASS_MEASUREMENT,
+        icon="mdi:thermometer-chevron-up"
+    ),
     cv.Optional(CONF_VORLAUF_SOLL_TV_DELTA): sensor.sensor_schema(
         CanSensor,
         device_class=DEVICE_CLASS_TEMPERATURE,
@@ -1920,6 +1929,12 @@ entity_schemas.update({
         cv.Optional(CONF_MODE, default="BOX"): cv.enum(number.NUMBER_MODES, upper=True)
     })
 })
+
+def _validate_tv_max(entities):
+    if CONF_TV_MAX in entities and "tv" not in entities:
+        raise cv.Invalid("tv_max needs the entity tv (it is published together with tv)", path=[CONF_TV_MAX])
+    return entities
+
 
 CONFIG_SCHEMA = cv.Schema(
     {
@@ -1957,8 +1972,9 @@ CONFIG_SCHEMA = cv.Schema(
             icon=ICON_SUN_SNOWFLAKE_VARIANT
         ).extend(),
 
-        cv.Required(CONF_ENTITIES): cv.Schema(
-            entity_schemas
+        cv.Required(CONF_ENTITIES): cv.All(
+            cv.Schema(entity_schemas),
+            _validate_tv_max,
         ),
     }
 ).extend(cv.COMPONENT_SCHEMA)
@@ -2123,6 +2139,13 @@ async def to_code(config):
                     update_interval = int(update_interval.total_milliseconds)
                 else:
                     update_interval = int(update_interval)
+
+                # tv_max: read tv often, publish tv and tv_max together at the configured interval
+                if sens_conf.get("name") == "tv" and (tv_max_conf := entities.get(CONF_TV_MAX)):
+                    tv_max_sens = await sensor.new_sensor(tv_max_conf)
+                    cg.add(entity.set_max_sensor(tv_max_sens, update_interval))
+                    manifest.add(CONF_TV_MAX, "sensor", tv_max_conf, unit=UNIT_CELSIUS)
+                    update_interval = min(update_interval, TV_MAX_POLL_MS)
 
                 async def handle_lambda():
                     lamb = str(sens_conf.get("handle_lambda")) if "handle_lambda" in sens_conf else "return 0;"

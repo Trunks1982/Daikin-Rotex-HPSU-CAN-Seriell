@@ -1,5 +1,7 @@
 #include "esphome/components/daikin_rotex_can/sensors.h"
 #include "esphome/components/daikin_rotex_can/entity.h"
+#include <algorithm>
+#include <cmath>
 
 namespace esphome {
 namespace daikin_rotex_can {
@@ -39,6 +41,21 @@ bool CanSensor::handleValue(uint16_t value, TEntity::TVariant& current, TVariant
     const bool valid = !m_range.required() || (float_value >= m_range.min && float_value <= m_range.max);
 
     if (valid) {
+        if (m_max_sensor != nullptr) {
+            // Window maximum over every value read since the previous publish
+            m_window_max = std::isnan(m_window_max) ? float_value : std::max(m_window_max, float_value);
+            const uint32_t now = esphome::millis();
+            if (m_published && (now - m_last_publish) < m_publish_interval) {
+                // Not published yet: no change towards entities that depend on this sensor
+                current = previous;
+                return true;
+            }
+            m_published = true;
+            m_last_publish = now;
+            // Both from the same reads at the same moment: max >= value
+            m_max_sensor->publish_state(m_window_max);
+            m_window_max = std::numeric_limits<float>::quiet_NaN();
+        }
         publish_state(float_value);
     } else {
         ESP_LOGE(CAN_SENSOR_TAG, "handleValue() => Sensor<%s> hex<%s> uint16<%d> float<%f> out of range[%f, %f]",

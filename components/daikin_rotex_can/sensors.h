@@ -10,6 +10,7 @@
 #include "esphome/components/number/number.h"
 #include "esphome/components/select/select.h"
 #include "esphome/components/switch/switch.h"
+#include <limits>
 
 namespace esphome {
 namespace daikin_rotex_can {
@@ -30,6 +31,12 @@ public:
     void set_range(Range const& range) { m_range = range; }
     void set_smooth(bool smooth) { m_smooth = smooth; }
     void set_logging(bool logging) { m_logging = logging; m_pid.set_logging(logging); }
+    /// Read the value every poll but publish it only every publish_interval_ms, together with the
+    /// highest value read since the previous publish on max_sensor (e.g. tv / tv_max).
+    void set_max_sensor(sensor::Sensor* max_sensor, uint32_t publish_interval_ms) {
+        m_max_sensor = max_sensor;
+        m_publish_interval = publish_interval_ms;
+    }
     virtual void update(uint32_t millis) override;
     void publish(float state);
 protected:
@@ -41,6 +48,11 @@ private:
     bool m_smooth;
     bool m_logging;
     float m_smooth_state;
+    sensor::Sensor* m_max_sensor = nullptr;
+    uint32_t m_publish_interval = 0;
+    uint32_t m_last_publish = 0;
+    bool m_published = false;
+    float m_window_max = std::numeric_limits<float>::quiet_NaN();
 };
 
 /////////////////////// CanTextSensor ///////////////////////
