@@ -1743,7 +1743,7 @@ CONF_TV_TVBH_DELTA = "tv_tvbh_delta"
 CONF_TVBH_TR_DELTA = "tvbh_tr_delta"
 CONF_VORLAUF_SOLL_TV_DELTA = "vorlauf_soll_tv_delta"
 CONF_TV_MAX = "tv_max"              # Highest Tv between two publishes of tv (needs tv)
-TV_MAX_POLL_MS = 1000               # Tv is read this often when tv_max is configured
+TV_MAX_POLL_MS = 2000               # Tv is read this often when tv_max is configured
 
 CONF_DUMP = "dump"
 CONF_DHW_RUN = "dhw_run"

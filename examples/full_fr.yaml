@@ -235,7 +235,7 @@ daikin_rotex_can:
     tv:
       name: TV
       update_interval: 30s
-    tv_max:  # Highest TV between two updates of TV (read every 1 s)
+    tv_max:  # Highest TV between two updates of TV (read every 2 s)
       name: TV Max
     tvbh:
       name: TVBH
