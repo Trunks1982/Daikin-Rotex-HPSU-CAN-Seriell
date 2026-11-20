@@ -2,6 +2,7 @@
 #include "esphome/components/daikin_rotex_can/sensors.h"
 #include "esphome/components/esp32_can/esp32_can.h"
 #include "esphome/core/log.h"
+#include <cmath>
 
 namespace esphome {
 namespace daikin_rotex_can {
@@ -188,10 +189,13 @@ bool TEntity::sendSet(esphome::esp32_can::ESP32Can* pCanBus, float value) {
     TMessage command = TMessage(m_config.command);
     command[0] = 0x30;
     command[1] = 0x00;
+    // value is already scaled by the divider (e.g. 27.3 * 10 = 272.99998): round instead of truncating;
+    // negative values of signed entities become their two's complement
+    const uint16_t raw = static_cast<uint16_t>(static_cast<int32_t>(std::lround(value)));
     if (m_config.set_lambda_set) {
-        m_config.set_lambda(command, value);
+        m_config.set_lambda(command, raw);
     } else {
-        Utils::setBytes(command, value, m_config.data_offset, m_config.data_size);
+        Utils::setBytes(command, raw, m_config.data_offset, m_config.data_size);
     }
 
     pCanBus->send_data(can_id, use_extended_id, { command.begin(), command.end() });
