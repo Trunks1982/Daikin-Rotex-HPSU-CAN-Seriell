@@ -52,6 +52,11 @@ canbus:
         data: "00 01"
       - key: "FA 01 12"   # operating_mode (Betriebsmodus): heating
         data: "03 00"
+      - key: "FA 13 59"   # cooling_setpoint_adj: 0.0 K, signed tenths
+        data: "00 00"
+        signed: true
+        min: -50
+        max: 50
       - key: "FA C2 FA"   # total_electrical_energy: not measured (older HPSU), sends 0x8000
         data: "80 00"
       - key: "FA C0 FB"   # bypass_valve (BPV): 50 %, sensor range [0, 100]
@@ -82,3 +87,5 @@ daikin_rotex_can:
       name: BPV
     total_electrical_energy:
       name: Elektrische Energie Gesamt
+    cooling_setpoint_adj:
+      name: Kühlen Sollwert Korrektur

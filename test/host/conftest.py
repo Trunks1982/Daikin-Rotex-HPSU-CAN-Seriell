@@ -110,6 +110,10 @@ class Device:
         assert self.client is not None
         self.client.select_command(self._keys[name], option)
 
+    def number(self, name: str, value: float) -> None:
+        assert self.client is not None
+        self.client.number_command(self._keys[name], value)
+
     async def hpsu_set(self, key: str, data: str) -> None:
         """The HPSU changes a value on its own."""
         assert self.client is not None
