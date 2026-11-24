@@ -30,6 +30,8 @@ public:
     CanSensor();
     CanSensor(std::string const& id);
     void set_range(Range const& range) { m_range = range; }
+    /// Raw value the HPSU sends when it has no value for this register: published as unknown (NaN).
+    void set_no_value(uint16_t raw) { m_no_value = raw; m_has_no_value = true; }
     void set_smooth(bool smooth) { m_smooth = smooth; }
     void set_logging(bool logging) { m_logging = logging; m_pid.set_logging(logging); }
     /// Read the value every poll but publish it only every publish_interval_ms, together with the
@@ -54,6 +56,8 @@ private:
     uint32_t m_last_publish = 0;
     bool m_published = false;
     float m_window_max = std::numeric_limits<float>::quiet_NaN();
+    uint16_t m_no_value = 0;
+    bool m_has_no_value = false;
 };
 
 /////////////////////// CanTextSensor ///////////////////////

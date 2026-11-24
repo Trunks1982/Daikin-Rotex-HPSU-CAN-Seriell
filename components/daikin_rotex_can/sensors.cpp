@@ -30,6 +30,16 @@ CanSensor::CanSensor(std::string const& id)
 }
 
 bool CanSensor::handleValue(uint16_t value, TEntity::TVariant& current, TVariant& previous) {
+    if (m_has_no_value && value == m_no_value) {
+        // no value from the HPSU (not measured): unknown instead of a number, not an error
+        if (!std::isnan(state)) {
+            ESP_LOGD(CAN_SENSOR_TAG, "handleValue() => Sensor<%s> hex<%s>: no value",
+                get_id().c_str(), Utils::to_hex(value).c_str());
+            publish_state(std::numeric_limits<float>::quiet_NaN());
+        }
+        return false;  // nothing to pass on to dependent entities
+    }
+
     previous = state;
     if (m_config.isSigned) {
         current = static_cast<int16_t>(value) / m_config.divider;

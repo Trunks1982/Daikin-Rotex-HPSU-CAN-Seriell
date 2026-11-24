@@ -10,6 +10,7 @@ Set HPSU_HOST_BINARY to use an already built program instead of compiling.
 from __future__ import annotations
 
 import asyncio
+import math
 import os
 import re
 import shutil
@@ -28,6 +29,7 @@ API_PORT = 16053
 TIMEOUT_S = 20.0
 
 ANSI = re.compile(r"\x1b\[[0-9;]*m")
+UNKNOWN = "unknown"  # state without a value (not read yet, or NaN)
 SIM_LINE = re.compile(r"\[hpsu_sim[^\]]*\]: (.*)$")
 
 
@@ -92,10 +94,13 @@ class Device:
 
     def _on_state(self, state) -> None:
         name = self._names.get(state.key)
-        if name is None or getattr(state, "missing_state", False):
+        if name is None:
             return
         value = state.state
-        self.states[name] = ("An" if value else "Aus") if isinstance(value, bool) else str(value)
+        if getattr(state, "missing_state", False) or (isinstance(value, float) and math.isnan(value)):
+            self.states[name] = UNKNOWN
+        else:
+            self.states[name] = ("An" if value else "Aus") if isinstance(value, bool) else str(value)
         self.history.append((name, self.states[name]))
         self._changed.set()
 

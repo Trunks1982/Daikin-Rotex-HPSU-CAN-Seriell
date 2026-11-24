@@ -2,16 +2,21 @@
 
 import pytest
 
+from conftest import UNKNOWN
+
 pytestmark = pytest.mark.asyncio
 
 ANTIFREEZE = "T-Frostschutz"
 STATE = "Betriebsart"
 BPV = "BPV"
+ENERGY = "Elektrische Energie Gesamt"
 
 ANTIFREEZE_KEY = "FA 0A 00"
 STATE_KEY = "FA C0 F6"
 BPV_KEY = "FA C0 FB"
 READ_BPV = "31 00 FA C0 FB 00 00"
+ENERGY_KEY = "FA C2 FA"
+READ_ENERGY = "31 00 FA C2 FA 00 00"
 HPSU_RESPONSE_ID = 0x180
 
 
@@ -63,6 +68,21 @@ async def test_update_of_unconfigured_entity_is_skipped(device):
     await device.wait_reads(device.mark(), READ_BPV)
 
     assert not [line for line in device.log[start:] if "[E]" in line]
+
+
+async def test_no_value_is_unknown_not_a_number(device):
+    # issue #153: an HPSU that does not measure the electrical energy always sends 0x8000
+    start = len(device.log)
+    await device.wait_reads(device.mark(), READ_ENERGY)
+    assert device.states.get(ENERGY, UNKNOWN) == UNKNOWN
+    assert not [line for line in device.log[start:] if "[E]" in line]
+
+    await device.hpsu_set(ENERGY_KEY, "01 2C")  # a measured value: 300 kWh
+    await device.wait_state(ENERGY, "300.0")
+
+    await device.hpsu_set(ENERGY_KEY, "80 00")  # no value again
+    await device.wait_state(ENERGY, UNKNOWN)
+    assert (ENERGY, "32768.0") not in device.history
 
 
 async def test_unknown_value_shows_raw_key(device):

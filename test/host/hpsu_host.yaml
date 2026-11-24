@@ -52,6 +52,8 @@ canbus:
         data: "00 01"
       - key: "FA 01 12"   # operating_mode (Betriebsmodus): heating
         data: "03 00"
+      - key: "FA C2 FA"   # total_electrical_energy: not measured (older HPSU), sends 0x8000
+        data: "80 00"
       - key: "FA C0 FB"   # bypass_valve (BPV): 50 %, sensor range [0, 100]
         data: "00 32"
       - key: "FA 0A 00"   # temperature_antifreeze (T-Frostschutz): off; HPSU accepts -15..5 °C and off (-16.0)
@@ -78,3 +80,5 @@ daikin_rotex_can:
       name: Abtau-Optimierung
     bypass_valve:
       name: BPV
+    total_electrical_energy:
+      name: Elektrische Energie Gesamt

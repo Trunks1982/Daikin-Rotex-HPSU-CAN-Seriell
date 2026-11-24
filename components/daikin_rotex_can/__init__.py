@@ -595,7 +595,8 @@ sensor_configuration = [
         "icon": "mdi:transmission-tower",
         "command": "31 00 FA C2 FA 00 00",
         "data_offset": 5,
-        "data_size": 2
+        "data_size": 2,
+        "no_value": 0x8000  # older HPSU (e.g. Compact 2016) do not measure it and always send 0x8000
     },
     {
         "type": "sensor",
@@ -2095,6 +2096,8 @@ async def to_code(config):
                         entity = await sensor.new_sensor(yaml_sensor_conf)
                         entity_type = ENTITY_TYPE_MAP["sensor"]
                         cg.add(entity.set_range(sens_conf.get("range", [0, 0])))
+                        if "no_value" in sens_conf:
+                            cg.add(entity.set_no_value(sens_conf["no_value"]))
                     case "text_sensor":
                         entity = await text_sensor.new_text_sensor(yaml_sensor_conf)
                         entity_type = ENTITY_TYPE_MAP["text_sensor"]
