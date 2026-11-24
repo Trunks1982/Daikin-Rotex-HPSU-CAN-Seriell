@@ -1930,10 +1930,47 @@ entity_schemas.update({
     })
 })
 
-def _validate_tv_max(entities):
-    if CONF_TV_MAX in entities and "tv" not in entities:
-        raise cv.Invalid("tv_max needs the entity tv (it is published together with tv)", path=[CONF_TV_MAX])
+# Entities calculated from others: they need these entities in the yaml (checked at config time)
+ENTITY_DEPENDENCIES = {
+    CONF_TV_MAX: ["tv"],  # published together with tv
+    CONF_THERMAL_POWER: ["flow_rate", "tv", "tr"],
+    CONF_THERMAL_POWER_RAW: ["flow_rate", "tv", "tr"],
+    CONF_TEMPERATURE_SPREAD: ["tv", "tr"],
+    CONF_TEMPERATURE_SPREAD_RAW: ["tv", "tr"],
+    CONF_TV_TVBH_DELTA: ["tv", "tvbh"],
+    CONF_TVBH_TR_DELTA: ["tvbh", "tr"],
+    CONF_VORLAUF_SOLL_TV_DELTA: ["target_supply_temperature", "tv"],
+    CONF_SUPPLY_SETPOINT_REGULATED: [
+        "mode_of_operating", "status_kompressor", "max_target_flow_temp", "tv", "target_supply_temperature"
+    ],
+}
+
+# update_entities targets calculated even if not in the yaml
+ALWAYS_UPDATED = {
+    CONF_TEMPERATURE_SPREAD,  # internal spread, used for the low spread detection of the error code
+}
+
+# update_entities target -> yaml entities it publishes to
+UPDATE_TARGETS = {
+    CONF_THERMAL_POWER: [CONF_THERMAL_POWER, CONF_THERMAL_POWER_RAW],
+}
+
+
+def _validate_dependencies(entities):
+    for name, needed in ENTITY_DEPENDENCIES.items():
+        if name in entities:
+            missing = [dep for dep in needed if dep not in entities]
+            if missing:
+                raise cv.Invalid(f"{name} needs the entities: {', '.join(missing)}", path=[name])
     return entities
+
+
+def _update_entities(sens_conf, entities):
+    """update_entities of an entity, without targets that are neither configured nor always updated."""
+    return [
+        target for target in sens_conf.get("update_entities", [])
+        if target in ALWAYS_UPDATED or any(name in entities for name in UPDATE_TARGETS.get(target, [target]))
+    ]
 
 
 CONFIG_SCHEMA = cv.Schema(
@@ -1974,7 +2011,7 @@ CONFIG_SCHEMA = cv.Schema(
 
         cv.Required(CONF_ENTITIES): cv.All(
             cv.Schema(entity_schemas),
-            _validate_tv_max,
+            _validate_dependencies,
         ),
     }
 ).extend(cv.COMPONENT_SCHEMA)
@@ -2183,7 +2220,7 @@ async def to_code(config):
                         sens_conf.get("data_size", 1),
                         divider,
                         sens_conf.get("signed", False),
-                        sens_conf.get("update_entities", []),
+                        _update_entities(sens_conf, entities),
                         update_interval,
                         await handle_lambda(),
                         await update_lambda(),

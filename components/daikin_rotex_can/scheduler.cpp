@@ -1,7 +1,7 @@
 #include "esphome/components/daikin_rotex_can/scheduler.h"
 #include "esphome/core/hal.h"
 
-#include <algorithm>
+#include <iterator>
 
 namespace esphome {
 namespace daikin_rotex_can {
@@ -59,16 +59,12 @@ bool Scheduler::accelerate_call(CallHandle::CallID id) {
 }
 
 bool Scheduler::cancel_call(CallHandle::CallID id) {
-    auto it = std::remove_if(m_later_calls.begin(), m_later_calls.end(),
-        [id](const DelayedCall& call) {
-            return call.id == id;
-        });
-
-    if (it != m_later_calls.end()) {
-        m_later_calls.erase(it, m_later_calls.end());
-        return true;
-    }
-    return false;
+    // list::remove_if unlinks nodes; std::remove_if would move the other calls around
+    const size_t size_before = m_later_calls.size();
+    m_later_calls.remove_if([id](const DelayedCall& call) {
+        return call.id == id;
+    });
+    return m_later_calls.size() != size_before;
 }
 
 void Scheduler::update() {
@@ -76,14 +72,19 @@ void Scheduler::update() {
 
     const uint32_t current_time = esphome::millis();
 
-    auto it = m_later_calls.begin();
-    while (it != m_later_calls.end()) {
+    // Take the due calls out first and run them afterwards: a call may cancel or add calls
+    // (also itself) without invalidating what is being iterated or executed.
+    std::list<DelayedCall> due;
+    for (auto it = m_later_calls.begin(); it != m_later_calls.end();) {
+        auto next = std::next(it);
         if ((int32_t)(current_time - it->execution_time) >= 0) {
-            it->function();
-            it = m_later_calls.erase(it);
-        } else {
-            ++it;
+            due.splice(due.end(), m_later_calls, it);
         }
+        it = next;
+    }
+
+    for (auto& call : due) {
+        call.function();
     }
 }
 

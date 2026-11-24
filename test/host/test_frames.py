@@ -41,6 +41,30 @@ async def test_value_outside_range_starting_at_zero_is_dropped(device):
     assert (BPV, "65535.0") not in device.history
 
 
+async def test_idle_loop_does_not_flood_the_log(device):
+    # hpsu_host.yaml has neither the regulated supply setpoint nor tv/tr (temperature spread)
+    await device.wait_state(BPV, "50.0")
+    start = len(device.log)
+    await device.wait_reads(device.mark(), READ_BPV)
+
+    window = device.log[start:]
+    assert not [line for line in window if "Entity not found" in line]
+    assert not [line for line in window if "[PID" in line]
+
+
+async def test_update_of_unconfigured_entity_is_skipped(device):
+    # a change of Betriebsart updates thermal_power, which hpsu_host.yaml does not have
+    # (nor flow_rate, tv, tr): nothing to calculate, nothing to report
+    await device.wait_state(STATE, "Heizen")
+    start = len(device.log)
+
+    await device.hpsu_set(STATE_KEY, "00 04")  # heating -> hot water
+    await device.wait_state(STATE, "Warmwasserbereitung")
+    await device.wait_reads(device.mark(), READ_BPV)
+
+    assert not [line for line in device.log[start:] if "[E]" in line]
+
+
 async def test_unknown_value_shows_raw_key(device):
     await device.wait_state(STATE, "Heizen")
 

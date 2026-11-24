@@ -5,6 +5,7 @@
 #include "esphome/components/daikin_rotex_can/entity.h"
 #include <iostream>
 #include <sstream>
+#include <cinttypes>
 #include <cstdint>
 #include <string>
 #include <vector>
@@ -260,8 +261,10 @@ void DaikinRotexCanComponent::update_thermal_power() {
 }
 
 void DaikinRotexCanComponent::update_temperature_spread() {
-    CanSensor const* tv = m_entity_manager.get_sensor("tv");
-    CanSensor const* tr = m_entity_manager.get_sensor("tr");
+    // also runs without temperature_spread in the yaml (internal spread for the error code),
+    // so tv and tr are optional here
+    CanSensor const* tv = m_entity_manager.get_sensor("tv", false);
+    CanSensor const* tr = m_entity_manager.get_sensor("tr", false);
 
     if (tv != nullptr && tr != nullptr) {
         const float temperature_spread = tv->state - tr->state;
@@ -343,7 +346,8 @@ void DaikinRotexCanComponent::on_betriebsart(TEntity::TVariant const& current, T
 
                 const uint16_t ui_new_mode = p_betriebs_modus->getKey(new_mode);
                 if (ui_new_mode != 0x0) {
-                    m_entity_manager.sendSet(Utils::entity_name(*p_betriebs_modus), ui_new_mode);
+                    // map key is the raw bus value: send it unscaled
+                    m_entity_manager.sendSetRaw(Utils::entity_name(*p_betriebs_modus), ui_new_mode);
                 }
             }
         } else {
@@ -497,6 +501,11 @@ void DaikinRotexCanComponent::loop() {
 }
 
 void DaikinRotexCanComponent::update_supply_setpoint_regulated() {
+    // runs in every loop: without the entity, do not look up (and log) the others
+    if (m_supply_setpoint_regulated == nullptr) {
+        return;
+    }
+
     CanTextSensor const* p_betriebs_art = m_entity_manager.get_text_sensor(BETRIEBS_ART);
     CanBinarySensor const* state_compressor = m_entity_manager.get_binary_sensor(STATE_COMPRESSOR);
     CanNumber const* pMaxTVorlauf = m_entity_manager.get_number(MAX_TARGET_FLOW_TEMP, false);
@@ -574,17 +583,17 @@ bool DaikinRotexCanComponent::is_modus_heating(std::string const& modus) {
 }
 
 std::string DaikinRotexCanComponent::recalculate_state(EntityBase* pEntity, std::string const& new_state) {
-    CanSensor const* tv = m_entity_manager.get_sensor("tv");
-    CanSensor const* tvbh = m_entity_manager.get_sensor("tvbh");
-    CanSensor const* tr = m_entity_manager.get_sensor("tr");
-    CanSensor const* dhw_mixer_position = m_entity_manager.get_sensor("dhw_mixer_position");
-    CanSensor const* bpv = m_entity_manager.get_sensor("bypass_valve");
-    CanSensor const* flow_rate = m_entity_manager.get_sensor(FLOW_RATE);
-    CanSensor const* ta = m_entity_manager.get_sensor("temperature_outside");
-    CanSensor const* tdhw1 = m_entity_manager.get_sensor("tdhw1");
-    CanTextSensor const* error_code = m_entity_manager.get_text_sensor("error_code");
-    CanTextSensor const* p_betriebs_art = m_entity_manager.get_text_sensor(BETRIEBS_ART);
-    CanBinarySensor const* state_compressor = m_entity_manager.get_binary_sensor(STATE_COMPRESSOR);
+    CanSensor const* tv = m_entity_manager.get_sensor("tv", false);
+    CanSensor const* tvbh = m_entity_manager.get_sensor("tvbh", false);
+    CanSensor const* tr = m_entity_manager.get_sensor("tr", false);
+    CanSensor const* dhw_mixer_position = m_entity_manager.get_sensor("dhw_mixer_position", false);
+    CanSensor const* bpv = m_entity_manager.get_sensor("bypass_valve", false);
+    CanSensor const* flow_rate = m_entity_manager.get_sensor(FLOW_RATE, false);
+    CanSensor const* ta = m_entity_manager.get_sensor("temperature_outside", false);
+    CanSensor const* tdhw1 = m_entity_manager.get_sensor("tdhw1", false);
+    CanTextSensor const* error_code = m_entity_manager.get_text_sensor("error_code", false);
+    CanTextSensor const* p_betriebs_art = m_entity_manager.get_text_sensor(BETRIEBS_ART, false);
+    CanBinarySensor const* state_compressor = m_entity_manager.get_binary_sensor(STATE_COMPRESSOR, false);
 
     if (error_code != nullptr && pEntity == error_code && tv != nullptr && tvbh != nullptr && tr != nullptr) {
         const float tv_state = tv->state + m_tv_tvbh_tr_offset.tv;
@@ -595,7 +604,7 @@ std::string DaikinRotexCanComponent::recalculate_state(EntityBase* pEntity, std:
             auto tv_tvbh_delta = tvbh_state - tv_state;
             const bool is_error_state = flow_rate->state > 600.0f && dhw_mixer_position->state == 0.0f && std::abs(tv_tvbh_delta) > m_max_spread.tvbh_tv;
 
-            Utils::log(ERROR_CODE_TAG, "tv: %f, tvbh: %f, tv-tvbh-delta: %f, max-delta: %f, dhw: %f, flow: %f, dhw_ts: %d, millis: %d",
+            Utils::log(ERROR_CODE_TAG, "tv: %f, tvbh: %f, tv-tvbh-delta: %f, max-delta: %f, dhw: %f, flow: %f, dhw_ts: %" PRIu32 ", millis: %" PRIu32,
                 tv_state, tvbh_state, tv_tvbh_delta, m_max_spread.tvbh_tv, dhw_mixer_position->state, flow_rate->state,
                     m_mixer_error_detection.get_error_detection_timestamp(),
                     esphome::millis());
@@ -611,7 +620,7 @@ std::string DaikinRotexCanComponent::recalculate_state(EntityBase* pEntity, std:
             const float tvbh_tr_delta = tvbh_state - tr_state;
             const bool is_error_state = flow_rate->state > 600.0f && bpv->state == 100.0f && std::abs(tvbh_tr_delta) > m_max_spread.tvbh_tr;
 
-            Utils::log(ERROR_CODE_TAG, "tvbh: %f, tr: %f, tvbh-tr-delta: %f, max-delta: %f, bpv: %f, flow: %f, bpv_ts: %d, millis: %d",
+            Utils::log(ERROR_CODE_TAG, "tvbh: %f, tr: %f, tvbh-tr-delta: %f, max-delta: %f, bpv: %f, flow: %f, bpv_ts: %" PRIu32 ", millis: %" PRIu32,
                 tvbh_state, tr_state, tvbh_tr_delta, m_max_spread.tvbh_tr, bpv->state, flow_rate->state,
                     m_bpv_error_detection.get_error_detection_timestamp(),
                     esphome::millis());
@@ -643,7 +652,7 @@ std::string DaikinRotexCanComponent::recalculate_state(EntityBase* pEntity, std:
 
                 const bool is_error_state = state_compressor->state && m_temperature_spread_sensor->state < min_spread;
 
-                Utils::log(TAG, "betriebsart: %s, compressor: %d, spread: %f, min_spread: %f, is_good_case_detected: %d, error_ts: %d, millis: %d",
+                Utils::log(TAG, "betriebsart: %s, compressor: %d, spread: %f, min_spread: %f, is_good_case_detected: %d, error_ts: %" PRIu32 ", millis: %" PRIu32,
                     p_betriebs_art->state.c_str(), state_compressor->state, m_temperature_spread_sensor->state, min_spread,
                     m_spread_error_detection.is_good_case_detected(), m_spread_error_detection.get_error_detection_timestamp(), esphome::millis());
 

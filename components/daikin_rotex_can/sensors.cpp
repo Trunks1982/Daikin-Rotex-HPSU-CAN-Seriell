@@ -68,7 +68,9 @@ bool CanSensor::handleValue(uint16_t value, TEntity::TVariant& current, TVariant
 void CanSensor::update(uint32_t millis) {
     TEntity::update(millis);
 
-    if (m_smooth) {
+    // nothing to smooth before the first value; compute() would not advance its time stamp and
+    // this would publish NaN in every loop
+    if (m_smooth && !std::isnan(m_state)) {
         const float dt = Utils::millis_since(m_pid.get_last_update()) / 1000.0f; // seconds
         if (dt > 10.0f) {
             if (std::isnan(m_smooth_state)) {
@@ -79,7 +81,8 @@ void CanSensor::update(uint32_t millis) {
             m_smooth_state += m_pid.compute(m_state, m_smooth_state, dt, logstr);
             Utils::log("PID", "%s: %s, val: %f", get_id().c_str(), logstr.c_str(), m_smooth_state);
 
-            m_smooth_state = std::ceil(m_smooth_state * 100.0) / 100.0;
+            // round to 0.01 (ceil shifted the value up a little with every step, fed back into the PID)
+            m_smooth_state = std::round(m_smooth_state * 100.0) / 100.0;
 
             publish_state(m_smooth_state);
         }
@@ -117,7 +120,8 @@ bool CanBinarySensor::handleValue(uint16_t value, TEntity::TVariant& current, TV
 void CanNumber::control(float value) {
     Utils::log(CAN_NUMBER_TAG, "control(%f), state: %f", value, this->state);
 
-    if (abs(value - this->state) >= 0.001f) {
+    // NaN: not read yet, any value is a change
+    if (std::isnan(this->state) || std::fabs(value - this->state) >= 0.001f) {
         this->publish_state(value);
         sendSet(m_pCanbus, value * get_config().divider);
     }

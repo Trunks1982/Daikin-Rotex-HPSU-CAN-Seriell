@@ -54,17 +54,17 @@ TEST(BidiMapTest, getKey) {
     BidiMap bidi_map(map);
 
     EXPECT_EQ(0, bidi_map.getKey(""));
-    EXPECT_EQ(1, bidi_map.findByValue("a")->first);
+    EXPECT_EQ(1, bidi_map.getKey("a"));
     EXPECT_EQ(0, bidi_map.getKey("b"));
-    EXPECT_EQ(3, bidi_map.findByValue("c")->first);
+    EXPECT_EQ(3, bidi_map.getKey("c"));
     EXPECT_EQ(0, bidi_map.getKey("d"));
-    EXPECT_EQ(5, bidi_map.findByValue("e")->first);
+    EXPECT_EQ(5, bidi_map.getKey("e"));
     EXPECT_EQ(0, bidi_map.getKey("f"));
-    EXPECT_EQ(7, bidi_map.findByValue("g")->first);
+    EXPECT_EQ(7, bidi_map.getKey("g"));
     EXPECT_EQ(0, bidi_map.getKey("h"));
 }
 
-TEST(BidiMapTest, assign) {
+TEST(BidiMapTest, copy) {
     std::map<uint16_t, std::string> map =  {{1, "a"}, {3, "c"}, {5, "e"}, {7, "g"}};
     BidiMap bidi_map(map);
     BidiMap bidi_map2(bidi_map);
@@ -78,4 +78,15 @@ TEST(BidiMapTest, assign) {
     EXPECT_EQ("e", bidi_map2.findNextByKey(6)->second);
     EXPECT_EQ("g", bidi_map2.findNextByKey(7)->second);
     EXPECT_EQ("g", bidi_map2.findNextByKey(8)->second);
+}
+
+TEST(BidiMapTest, assign) {
+    BidiMap bidi_map{{2, "x"}};
+    bidi_map = std::map<uint16_t, std::string>{{1, "a"}, {3, "c"}};
+
+    EXPECT_EQ("a", bidi_map.findByKey(1)->second);
+    EXPECT_EQ(3, bidi_map.getKey("c"));
+    // the previous content is gone in both directions
+    EXPECT_TRUE(bidi_map.findByKey(2) == bidi_map.end());
+    EXPECT_EQ(0, bidi_map.getKey("x"));
 }

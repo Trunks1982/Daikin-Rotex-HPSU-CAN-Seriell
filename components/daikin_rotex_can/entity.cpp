@@ -132,7 +132,9 @@ bool TEntity::handle(uint32_t can_id, TMessage const& responseData) {
             const bool changed = current != previous;
             if (changed) {
                 m_last_value_change_timestamp = esphome::millis();
-                m_post_handle_lambda(this, current, previous);
+                if (m_post_handle_lambda) {
+                    m_post_handle_lambda(this, current, previous);
+                }
             }
 
             std::string value;
@@ -167,6 +169,11 @@ bool TEntity::sendGet(esphome::canbus::Canbus* pCanBus) {
 
     const uint32_t can_id = 0x680;
     const bool use_extended_id = false;
+
+    // same 3 s as isGetInProgress(): after that the request counts as lost
+    if (m_last_get_timestamp > m_last_handle_timestamp && Utils::millis_since(m_last_get_timestamp) >= 3 * 1000) {
+        ESP_LOGW(TAG, "sendGet() => no response to the previous request: %s", m_config.id.c_str());
+    }
 
     pCanBus->send_data(can_id, use_extended_id, { m_config.command.begin(), m_config.command.end() });
 
@@ -208,9 +215,6 @@ bool TEntity::sendSet(esphome::canbus::Canbus* pCanBus, float value) {
 }
 
 void TEntity::update(uint32_t millis) {
-    if (isGetInProgress() && millis > (m_last_get_timestamp + 5 * 1000)) {
-        ESP_LOGE(TAG, "update() sedGet timeout! id: %s", m_config.id.c_str());
-    }
 }
 
 }

@@ -30,10 +30,12 @@ void TEntityManager::removeInvalidRequests() {
     );
 }
 
-CanSensor* TEntityManager::get_sensor(std::string const& id) {
+CanSensor* TEntityManager::get_sensor(std::string const& id, bool log_missing) {
     TEntity* pEntity = get(id);
     if (pEntity == nullptr) {
-        ESP_LOGE(TAG, "Entity not found: %s", id.c_str());
+        if (log_missing) {
+            ESP_LOGE(TAG, "Entity not found: %s", id.c_str());
+        }
         return nullptr;
     }
 
@@ -45,10 +47,12 @@ CanSensor* TEntityManager::get_sensor(std::string const& id) {
     return nullptr;
 }
 
-CanSensor const* TEntityManager::get_sensor(std::string const& id) const {
+CanSensor const* TEntityManager::get_sensor(std::string const& id, bool log_missing) const {
     TEntity const* pEntity = get(id);
     if (pEntity == nullptr) {
-        ESP_LOGE(TAG, "Const Entity not found: %s", id.c_str());
+        if (log_missing) {
+            ESP_LOGE(TAG, "Const Entity not found: %s", id.c_str());
+        }
         return nullptr;
     }
 
@@ -60,10 +64,12 @@ CanSensor const* TEntityManager::get_sensor(std::string const& id) const {
     return nullptr;
 }
 
-CanTextSensor* TEntityManager::get_text_sensor(std::string const& id) {
+CanTextSensor* TEntityManager::get_text_sensor(std::string const& id, bool log_missing) {
     TEntity* pEntity = get(id);
     if (pEntity == nullptr) {
-        ESP_LOGE(TAG, "get_text_sensor() => Entity not found: %s", id.c_str());
+        if (log_missing) {
+            ESP_LOGE(TAG, "get_text_sensor() => Entity not found: %s", id.c_str());
+        }
         return nullptr;
     }
 
@@ -75,10 +81,12 @@ CanTextSensor* TEntityManager::get_text_sensor(std::string const& id) {
     return nullptr;
 }
 
-CanTextSensor const* TEntityManager::get_text_sensor(std::string const& id) const {
+CanTextSensor const* TEntityManager::get_text_sensor(std::string const& id, bool log_missing) const {
     TEntity const* pEntity = get(id);
     if (pEntity == nullptr) {
-        ESP_LOGE(TAG, "const get_text_sensor() => Entity not found: %s", id.c_str());
+        if (log_missing) {
+            ESP_LOGE(TAG, "const get_text_sensor() => Entity not found: %s", id.c_str());
+        }
         return nullptr;
     }
 
@@ -90,10 +98,12 @@ CanTextSensor const* TEntityManager::get_text_sensor(std::string const& id) cons
     return nullptr;
 }
 
-CanBinarySensor const* TEntityManager::get_binary_sensor(std::string const& id) const {
+CanBinarySensor const* TEntityManager::get_binary_sensor(std::string const& id, bool log_missing) const {
     TEntity const* pEntity = get(id);
     if (pEntity == nullptr) {
-        ESP_LOGE(TAG, "const get_binary_sensor() => Entity not found: %s", id.c_str());
+        if (log_missing) {
+            ESP_LOGE(TAG, "const get_binary_sensor() => Entity not found: %s", id.c_str());
+        }
         return nullptr;
     }
 

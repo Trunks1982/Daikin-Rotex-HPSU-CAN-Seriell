@@ -25,13 +25,13 @@ public:
     const std::vector<TEntity*>& get_entities() const { return m_entities; }
     void set_delay_between_requests(uint16_t milliseconds);
 
-    CanSensor* get_sensor(std::string const& id);
-    CanSensor const* get_sensor(std::string const& id) const;
+    CanSensor* get_sensor(std::string const& id, bool log_missing = true);
+    CanSensor const* get_sensor(std::string const& id, bool log_missing = true) const;
 
-    CanTextSensor* get_text_sensor(std::string const& id);
-    CanTextSensor const* get_text_sensor(std::string const& id) const;
+    CanTextSensor* get_text_sensor(std::string const& id, bool log_missing = true);
+    CanTextSensor const* get_text_sensor(std::string const& id, bool log_missing = true) const;
 
-    CanBinarySensor const* get_binary_sensor(std::string const& id) const;
+    CanBinarySensor const* get_binary_sensor(std::string const& id, bool log_missing = true) const;
 
     CanNumber const* get_number(std::string const& id, bool log_missing = true) const;
 
