@@ -4,8 +4,9 @@
 
 using namespace esphome::daikin_rotex_can;
 
-// The scheduler is a singleton: every test starts at a fixed time and leaves no call behind
-// (a left-over call would write into a finished test's stack).
+// The scheduler is a singleton: every test starts at a fixed time and TearDown runs what is left.
+// Calls only capture members of the fixture, which still exist in TearDown (a local of the test
+// body would be gone by then).
 class SchedulerTest : public ::testing::Test {
 protected:
     void SetUp() override {
@@ -16,109 +17,87 @@ protected:
         Scheduler::getInstance().update();
         esphome::mock::set_millis(std::nullopt);
     }
+
+    CallHandle later(uint32_t timeout = 0u) {
+        return Scheduler::getInstance().call_later([this]() { ++calls; }, timeout);
+    }
+
+    int calls = 0;
+    CallHandle other;
 };
 
 TEST_F(SchedulerTest, CallLaterReturnsValidHandle) {
-    auto& scheduler = Scheduler::getInstance();
-
-    bool called = false;
-    auto handle = scheduler.call_later([&called]() {
-        called = true;
-    }, 100);
+    auto handle = later(100);
 
     EXPECT_TRUE(handle.is_valid());
-    EXPECT_FALSE(called);
+    EXPECT_EQ(0, calls);
 }
 
 TEST_F(SchedulerTest, CancelCallWorks) {
-    auto& scheduler = Scheduler::getInstance();
-
-    bool called = false;
-    auto handle = scheduler.call_later([&called]() {
-        called = true;
-    }, 100);
+    auto handle = later(100);
 
     EXPECT_TRUE(handle.cancel());
     EXPECT_FALSE(handle.is_valid());
-    scheduler.update();
-    EXPECT_FALSE(called);
+    Scheduler::getInstance().update();
+    EXPECT_EQ(0, calls);
 }
 
 TEST_F(SchedulerTest, AccelerateCallWorks) {
-    auto& scheduler = Scheduler::getInstance();
-
-    bool called = false;
-    auto handle = scheduler.call_later([&called]() {
-        called = true;
-    }, 100);
+    auto handle = later(100);
 
     EXPECT_TRUE(handle.accelerate());
 
-    scheduler.update();
-    EXPECT_TRUE(called);
+    Scheduler::getInstance().update();
+    EXPECT_EQ(1, calls);
 }
 
 TEST_F(SchedulerTest, CallRunsWhenDue) {
-    auto& scheduler = Scheduler::getInstance();
-
-    bool called = false;
-    scheduler.call_later([&called]() {
-        called = true;
-    }, 100);
+    later(100);
 
     esphome::mock::set_millis(1099);
-    scheduler.update();
-    EXPECT_FALSE(called);
+    Scheduler::getInstance().update();
+    EXPECT_EQ(0, calls);
 
     esphome::mock::set_millis(1100);
-    scheduler.update();
-    EXPECT_TRUE(called);
+    Scheduler::getInstance().update();
+    EXPECT_EQ(1, calls);
 }
 
 TEST_F(SchedulerTest, CallMayCancelAnotherDueCall) {
     auto& scheduler = Scheduler::getInstance();
 
-    int calls = 0;
-    CallHandle second;
-    scheduler.call_later([&]() {
+    scheduler.call_later([this]() {
         ++calls;
-        second.cancel();
+        other.cancel();
     });
-    second = scheduler.call_later([&calls]() {
-        ++calls;
-    });
+    other = later();
 
     scheduler.update();
     // both were due: the second is run as well (it was taken out before the first ran)
     EXPECT_EQ(2, calls);
-    EXPECT_FALSE(second.is_valid());
+    EXPECT_FALSE(other.is_valid());
 }
 
 TEST_F(SchedulerTest, CallMayCancelAPendingCall) {
     auto& scheduler = Scheduler::getInstance();
 
-    bool later_called = false;
-    CallHandle later = scheduler.call_later([&later_called]() {
-        later_called = true;
-    }, 100);
-    scheduler.call_later([&later]() {
-        later.cancel();
+    other = later(100);
+    scheduler.call_later([this]() {
+        other.cancel();
     });
 
     scheduler.update();
     esphome::mock::set_millis(1100);
     scheduler.update();
-    EXPECT_FALSE(later_called);
+    EXPECT_EQ(0, calls);
 }
 
 TEST_F(SchedulerTest, CallMayCancelItself) {
     auto& scheduler = Scheduler::getInstance();
 
-    int calls = 0;
-    CallHandle self;
-    self = scheduler.call_later([&]() {
+    other = scheduler.call_later([this]() {
         ++calls;
-        EXPECT_FALSE(self.cancel());  // already taken out: nothing to cancel
+        EXPECT_FALSE(other.cancel());  // already taken out: nothing to cancel
     });
 
     scheduler.update();
@@ -129,12 +108,9 @@ TEST_F(SchedulerTest, CallMayCancelItself) {
 TEST_F(SchedulerTest, CallMayAddACall) {
     auto& scheduler = Scheduler::getInstance();
 
-    int calls = 0;
-    scheduler.call_later([&]() {
+    scheduler.call_later([this]() {
         ++calls;
-        scheduler.call_later([&calls]() {
-            ++calls;
-        });
+        later();
     });
 
     scheduler.update();
