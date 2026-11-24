@@ -5,13 +5,9 @@ template:
       state: >-
         {% set thermische_leistung = states('sensor.rotex_thermische_leistung') | float(0) %}
         {% set stromverbrauch = states('sensor.wp_channel_a_power') | float(0) / 1000 %}
-        {% set kompressor_status = states('binary_sensor.rotex_status_kompressor') %}
-        {% if kompressor_status == 'An' and stromverbrauch > 0 %}
-          {% if thermische_leistung >= 0 %}
-            {{ (thermische_leistung / stromverbrauch) | round(2) }}
-          {% else %}
-            {{ (-1 * thermische_leistung / stromverbrauch) | round(2) }}
-          {% endif %}
+        {% if is_state('binary_sensor.rotex_status_kompressor', 'on') and stromverbrauch > 0 %}
+          {# negative thermal power while cooling #}
+          {{ (thermische_leistung | abs / stromverbrauch) | round(2) }}
         {% else %}
           0
         {% endif %}
