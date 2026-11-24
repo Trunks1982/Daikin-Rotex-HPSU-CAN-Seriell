@@ -52,7 +52,7 @@ jobs:
         run: python3 -m pip install esphome==${{ env.ESPHOME_VERSION }} pytest pytest-asyncio
 
       - name: Cache PlatformIO
-        uses: actions/cache@v4
+        uses: actions/cache@v5
         with:
           path: ~/.platformio
           key: platformio-host-${{ env.ESPHOME_VERSION }}
