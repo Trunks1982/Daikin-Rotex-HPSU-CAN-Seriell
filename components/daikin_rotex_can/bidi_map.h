@@ -1,7 +1,9 @@
 #pragma once
 
-#include <sstream>
+#include <cstdint>
 #include <map>
+#include <sstream>
+#include <string>
 
 namespace esphome {
 namespace daikin_rotex_can {
