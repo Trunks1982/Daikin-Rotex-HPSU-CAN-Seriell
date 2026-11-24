@@ -22,7 +22,8 @@ class CanSensor : public sensor::Sensor, public TEntity, public Parented<SensorA
         float min;
         float max;
 
-        bool required() { return min != 0 && max != 0; }
+        // [0, 0] means "no range" (default in __init__.py); a range may start or end at 0
+        bool required() const { return !(min == 0 && max == 0); }
     };
 
 public:
@@ -115,7 +116,7 @@ private:
 
 inline std::string CanSelect::findNextByKey(uint16_t value, std::string const& fallback) const { 
     auto it = m_map.findNextByKey(value);
-    return it != m_map.end() ? it->second : Utils::format("INVALID<%f>", value);
+    return it != m_map.end() ? it->second : fallback;
 };
 
 /////////////////////// CanSwitch ///////////////////////

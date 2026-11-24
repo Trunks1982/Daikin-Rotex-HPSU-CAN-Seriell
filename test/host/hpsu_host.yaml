@@ -34,6 +34,13 @@ api:
         data: string
       then:
         - lambda: id(can_bus).rocon_set(key, data);
+    # Any device sends a frame as given (any length)
+    - action: send_frame
+      variables:
+        can_id: int
+        data: string
+      then:
+        - lambda: id(can_bus).send_frame(can_id, data);
 
 canbus:
   - platform: hpsu_sim
@@ -45,6 +52,8 @@ canbus:
         data: "00 01"
       - key: "FA 01 12"   # operating_mode (Betriebsmodus): heating
         data: "03 00"
+      - key: "FA C0 FB"   # bypass_valve (BPV): 50 %, sensor range [0, 100]
+        data: "00 32"
       - key: "FA 0A 00"   # temperature_antifreeze (T-Frostschutz): off; HPSU accepts -15..5 °C and off (-16.0)
         data: "FF 60"
         min: -160
@@ -67,3 +76,5 @@ daikin_rotex_can:
       name: T-Frostschutz
     optimized_defrosting:
       name: Abtau-Optimierung
+    bypass_valve:
+      name: BPV

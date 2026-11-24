@@ -145,7 +145,8 @@ async def test_defrosting_without_optimization_keeps_mode(device):
 
     await device.hpsu_set(STATE_KEY, "00 03")  # heating -> defrosting
     await device.wait_state(STATE, "Abtauen")
-    await device.wait_reads(mark, READ_MODE)
+    # only from here on the ESP knows about defrosting: a summer set would follow within these reads
+    await device.wait_reads(device.mark(), READ_MODE)
 
     assert SET_MODE_SUMMER not in device.frames_since(mark)
     assert device.states[MODE] == "Heizen"

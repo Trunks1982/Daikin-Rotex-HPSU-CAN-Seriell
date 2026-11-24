@@ -136,7 +136,7 @@ public:
     }
 
     bool isChangedInLastMilliseconds(uint32_t milliseconds) const {
-        return esphome::millis() > (getLastValueChange() + milliseconds);
+        return Utils::millis_since(getLastValueChange()) > milliseconds;
     }
 
     void set_canbus(esphome::canbus::Canbus* pCanbus) {
@@ -226,7 +226,7 @@ inline bool TEntity::isGetNeeded() const {
     }
 
     const uint32_t update_interval = get_update_interval();
-    return getLastUpdate() == 0 || (esphome::millis() > (getLastUpdate() + update_interval));
+    return getLastUpdate() == 0 || Utils::millis_since(getLastUpdate()) > update_interval;
 }
 
 inline uint32_t TEntity::getOverdueTime() const {
@@ -235,13 +235,8 @@ inline uint32_t TEntity::getOverdueTime() const {
     }
 
     const uint32_t update_interval = get_update_interval();
-    const uint32_t due_time = getLastUpdate() + update_interval;
-    const uint32_t now = esphome::millis();
-
-    if (now > due_time) {
-        return now - due_time;
-    }
-    return 0u;
+    const uint32_t elapsed = Utils::millis_since(getLastUpdate());
+    return elapsed > update_interval ? elapsed - update_interval : 0u;
 }
 
 inline bool TEntity::is_command_configured() const {

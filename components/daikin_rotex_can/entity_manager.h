@@ -85,8 +85,7 @@ inline void TEntityManager::set_delay_between_requests(uint16_t milliseconds) {
 }
 
 inline bool TEntityManager::is_allowed_by_delay_between_requests() const {
-    const uint32_t now = esphome::millis();
-    return now >= (m_last_handle + m_delay_between_requests);
+    return Utils::millis_since(m_last_handle) >= m_delay_between_requests;
 }
 
 }

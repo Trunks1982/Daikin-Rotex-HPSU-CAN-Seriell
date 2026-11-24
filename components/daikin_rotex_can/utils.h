@@ -2,6 +2,7 @@
 
 #include "esphome/components/daikin_rotex_can/types.h"
 #include "esphome/core/entity_base.h"
+#include "esphome/core/hal.h"
 #include "esphome/core/version.h"
 #include <functional>
 #include <memory>
@@ -57,6 +58,10 @@ public:
     }
 
     static bool equals(float a, float b, float epsilon);
+
+    /// Milliseconds since `since` (an earlier esphome::millis() value). The unsigned subtraction stays
+    /// correct across the millis() overflow after 49.7 days, `millis() > since + interval` does not.
+    static uint32_t millis_since(uint32_t since) { return esphome::millis() - since; }
 
 private:
     static void log_impl(std::string const& tag, std::string const& formatted);

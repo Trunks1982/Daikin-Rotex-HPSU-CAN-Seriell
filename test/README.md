@@ -25,9 +25,10 @@ Instead of the CAN driver it uses `hpsu_sim`, a simulated HPSU on a virtual bus
 set requests, drops values outside a register's limits (as the HPSU does) and logs every frame.
 
 The pytest tests start the program, talk to it through the native API like Home Assistant
-(select an option, wait for states) and check the frames on the bus. Two API actions let a test
+(select an option, wait for states) and check the frames on the bus. Three API actions let a test
 play the other side: `hpsu_set` (the HPSU changes a value on its own, e.g. heating ->
-defrosting) and `rocon_set` (the RoCon control panel writes a value).
+defrosting), `rocon_set` (the RoCon control panel writes a value) and `send_frame` (any device
+puts a frame on the bus as given, e.g. a short one).
 
 ```sh
 python3 -m venv .venv && . .venv/bin/activate

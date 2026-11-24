@@ -146,4 +146,8 @@ void HpsuSim::rocon_set(std::string const &key_hex, std::string const &data_hex)
   }
 }
 
+void HpsuSim::send_frame(uint32_t can_id, std::string const &data_hex) {
+  this->enqueue(can_id, parse_hex(data_hex));
+}
+
 }  // namespace esphome::hpsu_sim

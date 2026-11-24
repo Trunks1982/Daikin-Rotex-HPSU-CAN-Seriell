@@ -22,6 +22,9 @@ class HpsuSim : public canbus::Canbus {
   // The RoCon control panel writes a value: the frame from 0x10A reaches the ESP as well.
   void rocon_set(std::string const &key_hex, std::string const &data_hex);
 
+  // Any device puts a frame on the bus as given (any length, e.g. a short frame).
+  void send_frame(uint32_t can_id, std::string const &data_hex);
+
   canbus::CanStatus get_status() override { return {}; }
 
  protected:

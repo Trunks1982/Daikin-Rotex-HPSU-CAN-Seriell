@@ -63,7 +63,7 @@ bool DaikinRotexCanComponent::ErrorDetection::handle_error_detection(bool is_err
             m_error_timestamp = esphome::millis();
         }
 
-        if (m_error_timestamp != 0 && esphome::millis() > (m_error_timestamp + m_detection_time_ms)) {
+        if (m_error_timestamp != 0 && Utils::millis_since(m_error_timestamp) > m_detection_time_ms) {
             return true;
         }
     } else {
@@ -524,7 +524,7 @@ void DaikinRotexCanComponent::update_supply_setpoint_regulated() {
         return;
     }
 
-    if (m_last_supply_setpoint_regulated_ts == 0u || esphome::millis() > (m_last_supply_setpoint_regulated_ts + 30 * 1000)) {
+    if (m_last_supply_setpoint_regulated_ts == 0u || Utils::millis_since(m_last_supply_setpoint_regulated_ts) > 30 * 1000) {
         if (max_t_vorlauf != vorlauf_soll_reguliert) {
             float vorlauf_soll_request = vorlauf_soll;
             if (tv > vorlauf_soll && (tv - vorlauf_soll) > 2.5) {
@@ -549,6 +549,9 @@ void DaikinRotexCanComponent::update_supply_setpoint_regulated() {
 
 void DaikinRotexCanComponent::handle(uint32_t can_id, std::vector<uint8_t> const& data) {
     TMessage message;
+    if (data.size() < message.size()) {
+        return; // HPSU frames have 7 bytes; shorter ones (other devices, RTR) cannot match an entity
+    }
     std::copy_n(data.begin(), message.size(), message.begin());
     m_entity_manager.handle(can_id, message);
 }

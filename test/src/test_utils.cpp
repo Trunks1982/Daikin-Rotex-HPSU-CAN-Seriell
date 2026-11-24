@@ -1,4 +1,5 @@
 #include "esphome/components/daikin_rotex_can/utils.h"
+#include "mock_esphome.h"
 #include <gtest/gtest.h>
 
 using namespace esphome::daikin_rotex_can;
@@ -69,4 +70,22 @@ TEST(UtilsTest, setBytes) {
     Utils::setBytes(msg, 0x07C1, 4, 2);
 
     EXPECT_EQ("07 12 AF 00 07 C1 00", Utils::to_hex(msg));
+}
+
+TEST(UtilsTest, millis_since) {
+    esphome::mock::set_millis(5000);
+    EXPECT_EQ(0u, Utils::millis_since(5000));
+    EXPECT_EQ(4000u, Utils::millis_since(1000));
+    esphome::mock::set_millis(std::nullopt);
+}
+
+TEST(UtilsTest, millis_since_across_overflow) {
+    // millis() overflows after 49.7 days: 10 ms before the overflow until 5 ms after it
+    const uint32_t before = UINT32_MAX - 9;
+    esphome::mock::set_millis(5);
+    EXPECT_EQ(15u, Utils::millis_since(before));
+    // the old form `now > before + interval` would say "not yet" here for the next 49 days
+    EXPECT_TRUE(Utils::millis_since(before) > 10u);
+    EXPECT_FALSE(Utils::millis_since(before) > 20u);
+    esphome::mock::set_millis(std::nullopt);
 }

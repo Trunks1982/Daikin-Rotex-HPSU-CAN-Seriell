@@ -48,8 +48,10 @@ class Device:
     def __init__(self, process: asyncio.subprocess.Process) -> None:
         self.process = process
         self.client: APIClient | None = None
+        self.log: list[str] = []          # every output line of the program
         self.bus: list[str] = []          # simulator log lines, e.g. "rx 0x680: 30 00 FA 0A 00 FF 60"
         self.states: dict[str, str] = {}  # entity name -> current state as text
+        self.history: list[tuple[str, str]] = []  # every state received, in order: (name, state)
         self._keys: dict[str, int] = {}
         self._names: dict[int, str] = {}
         self._services: dict = {}
@@ -60,6 +62,7 @@ class Device:
         assert self.process.stdout is not None
         while line := await self.process.stdout.readline():
             text = ANSI.sub("", line.decode(errors="replace")).rstrip()
+            self.log.append(text)
             if match := SIM_LINE.search(text):
                 self.bus.append(match.group(1))
                 self._changed.set()
@@ -93,6 +96,7 @@ class Device:
             return
         value = state.state
         self.states[name] = ("An" if value else "Aus") if isinstance(value, bool) else str(value)
+        self.history.append((name, self.states[name]))
         self._changed.set()
 
     # ---- actions (like Home Assistant / the HPSU) ----
@@ -110,6 +114,11 @@ class Device:
         """The RoCon control panel writes a value."""
         assert self.client is not None
         await self.client.execute_service(self._services["rocon_set"], {"key": key, "data": data})
+
+    async def send_frame(self, can_id: int, data: str) -> None:
+        """Any device puts a frame on the bus as given (any length)."""
+        assert self.client is not None
+        await self.client.execute_service(self._services["send_frame"], {"can_id": can_id, "data": data})
 
     # ---- waits and checks ----
 

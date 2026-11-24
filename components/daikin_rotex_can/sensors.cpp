@@ -69,7 +69,7 @@ void CanSensor::update(uint32_t millis) {
     TEntity::update(millis);
 
     if (m_smooth) {
-        const float dt = (static_cast<float>(esphome::millis()) - m_pid.get_last_update()) / 1000.0f; // seconds
+        const float dt = Utils::millis_since(m_pid.get_last_update()) / 1000.0f; // seconds
         if (dt > 10.0f) {
             if (std::isnan(m_smooth_state)) {
                 m_smooth_state = m_state;
@@ -98,7 +98,7 @@ void CanSensor::publish(float state) {
 bool CanTextSensor::handleValue(uint16_t value, TEntity::TVariant& current, TVariant& previous) {
     previous = state;
     auto it = m_map.findByKey(value);
-    current = m_recalculate_state(m_config.pEntity, it != m_map.end() ? it->second : Utils::format("INVALID<%f>", value));
+    current = m_recalculate_state(m_config.pEntity, it != m_map.end() ? it->second : Utils::format("INVALID<0x%04X>", static_cast<unsigned>(value)));
     publish_state(std::get<std::string>(current));
     return true;
 }
@@ -166,7 +166,7 @@ void CanSelect::publish_select_key(uint16_t key) {
 
 bool CanSelect::handleValue(uint16_t value, TEntity::TVariant& current, TVariant& previous) {
     previous = current_option();
-    current = findNextByKey(value, Utils::format("INVALID<%f>", value));
+    current = findNextByKey(value, Utils::format("INVALID<0x%04X>", static_cast<unsigned>(value)));
     publish_state(std::get<std::string>(current));
     return true;
 }
