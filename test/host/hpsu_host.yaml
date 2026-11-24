@@ -1,0 +1,69 @@
+# Host build of the component against a simulated HPSU (test/host/components/hpsu_sim).
+# Used by the pytest tests in this folder; runs as a normal Linux program.
+esphome:
+  name: hpsu-host
+
+host:
+
+external_components:
+  - source:
+      type: local
+      path: ../../components
+  - source:
+      type: local
+      path: components
+
+logger:
+  level: INFO
+
+api:
+  port: 16053
+  reboot_timeout: 0s
+  actions:
+    # The HPSU changes a value on its own (seen by the ESP with its next read)
+    - action: hpsu_set
+      variables:
+        key: string
+        data: string
+      then:
+        - lambda: id(can_bus).hpsu_set(key, data);
+    # The RoCon control panel writes a value (frame from 0x10A)
+    - action: rocon_set
+      variables:
+        key: string
+        data: string
+      then:
+        - lambda: id(can_bus).rocon_set(key, data);
+
+canbus:
+  - platform: hpsu_sim
+    id: can_bus
+    can_id: 0x680
+    bit_rate: 20kbps
+    registers:
+      - key: "FA C0 F6"   # mode_of_operating (Betriebsart): heating
+        data: "00 01"
+      - key: "FA 01 12"   # operating_mode (Betriebsmodus): heating
+        data: "03 00"
+      - key: "FA 0A 00"   # temperature_antifreeze (T-Frostschutz): off; HPSU accepts -15..5 °C and off (-16.0)
+        data: "FF 60"
+        min: -160
+        max: 50
+        signed: true
+
+daikin_rotex_can:
+  id: rotex_hpsu
+  language: de
+  canbus_id: can_bus
+  update_interval: 1s
+  project_git_hash:
+    name: Project Git Hash
+  entities:
+    mode_of_operating:
+      name: Betriebsart
+    operating_mode:
+      name: Betriebsmodus
+    temperature_antifreeze:
+      name: T-Frostschutz
+    optimized_defrosting:
+      name: Abtau-Optimierung

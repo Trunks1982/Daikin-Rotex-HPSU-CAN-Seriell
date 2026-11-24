@@ -14,8 +14,8 @@ public:
 
     void removeInvalidRequests();
 
-    void setCanbus(esphome::esp32_can::ESP32Can* pCanbus);
-    esphome::esp32_can::ESP32Can* getCanbus() const;
+    void setCanbus(esphome::canbus::Canbus* pCanbus);
+    esphome::canbus::Canbus* getCanbus() const;
 
     uint32_t size() const;
     TEntity const* get(uint32_t index) const;
@@ -41,24 +41,34 @@ public:
     bool is_allowed_by_delay_between_requests() const;
 
     bool sendNextPendingRequest();
+    // value in entity units, scaled by the entity's divider before sending
     bool sendSet(std::string const& request_name, float value);
+    // raw value as sent on the bus (e.g. a select map key), not scaled
+    bool sendSetRaw(std::string const& request_name, uint16_t raw);
     void handle(uint32_t can_id, TMessage const& responseData);
 
 private:
+    struct SetRequest {
+        std::string name;
+        float value;
+        bool raw;
+    };
+
     TEntity* getNextGetRequestToSend();
+    bool sendSet(std::string const& request_name, float value, bool raw);
 
     std::vector<TEntity*> m_entities;
-    esphome::esp32_can::ESP32Can* m_pCanbus;
+    esphome::canbus::Canbus* m_pCanbus;
     uint32_t m_last_handle;
     uint16_t m_delay_between_requests;
-    std::deque<std::pair<std::string, float>> m_set_request_queue;
+    std::deque<SetRequest> m_set_request_queue;
 };
 
-inline void TEntityManager::setCanbus(esphome::esp32_can::ESP32Can* pCanbus) {
+inline void TEntityManager::setCanbus(esphome::canbus::Canbus* pCanbus) {
     m_pCanbus = pCanbus;
 }
 
-inline esphome::esp32_can::ESP32Can* TEntityManager::getCanbus() const {
+inline esphome::canbus::Canbus* TEntityManager::getCanbus() const {
     return m_pCanbus;
 }
 

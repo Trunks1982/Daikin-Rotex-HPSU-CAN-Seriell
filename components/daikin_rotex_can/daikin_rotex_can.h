@@ -5,7 +5,7 @@
 #include "esphome/components/daikin_rotex_can/sensors.h"
 #include "esphome/components/daikin_rotex_can/scheduler.h"
 #include "esphome/components/daikin_rotex_can/pid.h"
-#include "esphome/components/esp32_can/esp32_can.h"
+#include "esphome/components/canbus/canbus.h"
 #include "esphome/core/component.h"
 #include <list>
 #include <vector>
@@ -45,7 +45,7 @@ public:
     void loop() override;
     void dump_config() override;
 
-    void set_canbus(esphome::esp32_can::ESP32Can* pCanbus);
+    void set_canbus(esphome::canbus::Canbus* pCanbus);
     void set_update_interval(uint16_t seconds) {} // dummy
     void set_project_git_hash(text_sensor::TextSensor* pSensor, std::string const& hash);
     void set_thermal_power_sensor(CanSensor* pSensor);
@@ -101,7 +101,8 @@ private:
     };
 
     void updateState(std::string const& id);
-    bool on_custom_select(std::string const& id, uint8_t value);
+    bool on_custom_select(std::string const& id, uint16_t value);
+    void disable_optimized_defrosting();
     void on_betriebsart(TEntity::TVariant const& current, TEntity::TVariant const& previous);
     void on_betriebsmodus(TEntity::TVariant const& current, TEntity::TVariant const& previous);
 
@@ -119,7 +120,7 @@ private:
     std::string m_betriebsmodus_before_dhw_and_defrosting;
     text_sensor::TextSensor* m_project_git_hash_sensor;
     std::string m_project_git_hash;
-    esphome::esp32_can::ESP32Can* m_pCanbus;
+    esphome::canbus::Canbus* m_pCanbus;
 
     CanSensor* m_thermal_power_sensor;
     CanSensor* m_thermal_power_raw_sensor;
@@ -141,7 +142,7 @@ private:
     std::vector<const char*> m_manifest_pages;
 };
 
-inline void DaikinRotexCanComponent::set_canbus(esphome::esp32_can::ESP32Can* pCanbus) {
+inline void DaikinRotexCanComponent::set_canbus(esphome::canbus::Canbus* pCanbus) {
     m_entity_manager.setCanbus(pCanbus);
     m_pCanbus = pCanbus;
 

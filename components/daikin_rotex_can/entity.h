@@ -4,7 +4,7 @@
 #include "esphome/components/daikin_rotex_can/types.h"
 #include "esphome/components/daikin_rotex_can/utils.h"
 #include "esphome/components/daikin_rotex_can/entity_type.h"
-#include "esphome/components/esp32_can/esp32_can.h"
+#include "esphome/components/canbus/canbus.h"
 #include "esphome/core/entity_base.h"
 #include "esphome/core/hal.h"
 #include <functional>
@@ -139,7 +139,7 @@ public:
         return esphome::millis() > (getLastValueChange() + milliseconds);
     }
 
-    void set_canbus(esphome::esp32_can::ESP32Can* pCanbus) {
+    void set_canbus(esphome::canbus::Canbus* pCanbus) {
         m_pCanbus = pCanbus;
     }
 
@@ -166,8 +166,8 @@ public:
     bool isMatch(uint32_t can_id, TMessage const& responseData) const;
     bool handle(uint32_t can_id, TMessage const& responseData);
 
-    bool sendGet(esphome::esp32_can::ESP32Can* pCanBus);
-    bool sendSet(esphome::esp32_can::ESP32Can* pCanBus, float value);
+    bool sendGet(esphome::canbus::Canbus* pCanBus);
+    bool sendSet(esphome::canbus::Canbus* pCanBus, float value);
 
     bool isGetNeeded() const;
     uint32_t getOverdueTime() const;
@@ -209,7 +209,7 @@ protected:
 
 protected:
     TEntityArguments m_config;
-    esphome::esp32_can::ESP32Can* m_pCanbus;
+    esphome::canbus::Canbus* m_pCanbus;
 
 private:
     IAccessor const* m_pAccessor;

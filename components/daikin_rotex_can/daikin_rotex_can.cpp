@@ -174,14 +174,9 @@ void DaikinRotexCanComponent::on_post_handle(TEntity* pEntity, TEntity::TVariant
             on_betriebsmodus(current, previous);
         });
     } else if (id == TEMPERATURE_ANTIFREEZE) {
-        CanSelect* p_optimized_defrosting = m_entity_manager.get_select(OPTIMIZED_DEFROSTING);
         CanSelect* p_temperature_antifreeze = m_entity_manager.get_select(TEMPERATURE_ANTIFREEZE);
-        if (p_optimized_defrosting != nullptr && p_temperature_antifreeze != nullptr) {
-            if (p_temperature_antifreeze->current_option().str() != Translation::T_OFF && m_optimized_defrosting.value() != 0x0) {
-                p_optimized_defrosting->publish_select_key(0x0);
-                m_optimized_defrosting.save(0x0);
-                Utils::log(TAG, "set %s: %d", OPTIMIZED_DEFROSTING.c_str(), m_optimized_defrosting.value());
-            }
+        if (p_temperature_antifreeze != nullptr && p_temperature_antifreeze->current_option().str() != Translation::T_OFF) {
+            disable_optimized_defrosting();
         }
     } else if (id == STATE_COMPRESSOR && current != previous) {
         m_spread_error_detection.reset_good_case();
@@ -278,20 +273,36 @@ void DaikinRotexCanComponent::update_temperature_spread() {
     }
 }
 
-bool DaikinRotexCanComponent::on_custom_select(std::string const& id, uint8_t value) {
+void DaikinRotexCanComponent::disable_optimized_defrosting() {
+    CanSelect* p_optimized_defrosting = m_entity_manager.get_select(OPTIMIZED_DEFROSTING);
+    if (p_optimized_defrosting != nullptr && m_optimized_defrosting.value() != 0x0) {
+        p_optimized_defrosting->publish_select_key(0x0);
+        m_optimized_defrosting.save(0x0);
+        Utils::log(TAG, "set %s: %d", OPTIMIZED_DEFROSTING.c_str(), m_optimized_defrosting.value());
+    }
+}
+
+bool DaikinRotexCanComponent::on_custom_select(std::string const& id, uint16_t value) {
     if (id == OPTIMIZED_DEFROSTING) {
         Utils::log(TAG, "%s: %d", OPTIMIZED_DEFROSTING.c_str(), value);
         CanSelect* p_temperature_antifreeze = m_entity_manager.get_select(TEMPERATURE_ANTIFREEZE);
 
         if (p_temperature_antifreeze != nullptr) {
             if (value != 0) {
-                m_entity_manager.sendSet(Utils::entity_name(*p_temperature_antifreeze), p_temperature_antifreeze->getKey(Translation::T_OFF));
+                // map key is the raw bus value (already scaled): send it unscaled
+                m_entity_manager.sendSetRaw(Utils::entity_name(*p_temperature_antifreeze), p_temperature_antifreeze->getKey(Translation::T_OFF));
             }
         } else {
             ESP_LOGE(TAG, "on_custom_select(%s, %d) => temperature_antifreeze select is missing!", id.c_str(), value);
         }
         m_optimized_defrosting.save(value);
         return true;
+    } else if (id == TEMPERATURE_ANTIFREEZE) {
+        CanSelect* p_temperature_antifreeze = m_entity_manager.get_select(TEMPERATURE_ANTIFREEZE);
+        if (p_temperature_antifreeze != nullptr && value != p_temperature_antifreeze->getKey(Translation::T_OFF)) {
+            disable_optimized_defrosting();
+        }
+        return false; // let CanSelect::control() write the value
     }
     return false;
 }
@@ -395,7 +406,7 @@ void DaikinRotexCanComponent::custom_request(std::string const& value) {
         Utils::log(TAG, "custom_request() can_id<%s> data<%s> str<%s>",
             Utils::to_hex(can_id).c_str(), Utils::to_hex(message).c_str(), value.c_str());
 
-        esphome::esp32_can::ESP32Can* pCanbus = m_entity_manager.getCanbus();
+        esphome::canbus::Canbus* pCanbus = m_entity_manager.getCanbus();
         pCanbus->send_data(can_id, use_extended_id, { message.begin(), message.end() });
     } else {
         ESP_LOGW(TAG, "custom_request() invalid message: %s", value.c_str());

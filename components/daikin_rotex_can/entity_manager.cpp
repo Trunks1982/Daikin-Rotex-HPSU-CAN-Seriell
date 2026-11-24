@@ -156,8 +156,9 @@ bool TEntityManager::sendNextPendingRequest() {
     if (m_set_request_queue.empty() == false && is_allowed_by_delay_between_requests()) {
         auto request = m_set_request_queue.front();
         m_set_request_queue.pop_front();
-        ESP_LOGI(TAG, "sendNextPendingRequest: Process queued set request => name: %s, value: %f", request.first.c_str(), request.second);
-        return sendSet(request.first, request.second);
+        ESP_LOGI(TAG, "sendNextPendingRequest: Process queued set request => name: %s, value: %f, raw: %d",
+            request.name.c_str(), request.value, request.raw);
+        return sendSet(request.name, request.value, request.raw);
     }
 
     TEntity* pEntity = getNextGetRequestToSend();
@@ -168,11 +169,17 @@ bool TEntityManager::sendNextPendingRequest() {
 }
 
 bool TEntityManager::sendSet(std::string const& request_name, float value) {
-    const uint32_t now = esphome::millis();
+    return sendSet(request_name, value, false);
+}
 
+bool TEntityManager::sendSetRaw(std::string const& request_name, uint16_t raw) {
+    return sendSet(request_name, static_cast<float>(raw), true);
+}
+
+bool TEntityManager::sendSet(std::string const& request_name, float value, bool raw) {
     if (!is_allowed_by_delay_between_requests()) {
-        ESP_LOGE(TAG, "sendSet: Add to queue => name: %s, value: %f", request_name.c_str(), value);
-        m_set_request_queue.push_back(std::make_pair(request_name, value));
+        ESP_LOGI(TAG, "sendSet: Add to queue => name: %s, value: %f, raw: %d", request_name.c_str(), value, raw);
+        m_set_request_queue.push_back(SetRequest{request_name, value, raw});
         return false;
     }
 
@@ -181,7 +188,7 @@ bool TEntityManager::sendSet(std::string const& request_name, float value) {
     );
     bool result = false;
     if (it != m_entities.end()) {
-        result = (*it)->sendSet(m_pCanbus, value * (*it)->get_config().divider);
+        result = (*it)->sendSet(m_pCanbus, raw ? value : value * (*it)->get_config().divider);
         m_last_handle = esphome::millis();
     } else {
         ESP_LOGE(TAG, "sendSet: Unknown request: %s", request_name.c_str());

@@ -1,6 +1,6 @@
 #include "esphome/components/daikin_rotex_can/entity.h"
 #include "esphome/components/daikin_rotex_can/sensors.h"
-#include "esphome/components/esp32_can/esp32_can.h"
+#include "esphome/components/canbus/canbus.h"
 #include "esphome/core/log.h"
 #include <cmath>
 
@@ -159,7 +159,7 @@ bool TEntity::handle(uint32_t can_id, TMessage const& responseData) {
     return false;
 }
 
-bool TEntity::sendGet(esphome::esp32_can::ESP32Can* pCanBus) {
+bool TEntity::sendGet(esphome::canbus::Canbus* pCanBus) {
     if (pCanBus == nullptr) {
         ESP_LOGE(TAG, "sendGet() => pCanbus is null!");
         return false;
@@ -177,7 +177,7 @@ bool TEntity::sendGet(esphome::esp32_can::ESP32Can* pCanBus) {
     return true;
 }
 
-bool TEntity::sendSet(esphome::esp32_can::ESP32Can* pCanBus, float value) {
+bool TEntity::sendSet(esphome::canbus::Canbus* pCanBus, float value) {
     if (pCanBus == nullptr) {
         ESP_LOGE(TAG, "sendSet() => pCanbus is null!");
         return false;
